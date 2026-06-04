@@ -1,0 +1,15 @@
+from django.db import models
+from core.models import Department
+
+class Book(models.Model):
+    title = models.CharField(max_length=200)
+    author = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    department = models.ForeignKey(Department, on_delete=models.CASCADE)  # NOT NULL
+    tags = models.CharField(max_length=200, blank=True, help_text="Comma-separated tags")
+    pdf_file = models.FileField(upload_to='books/')
+    cover_image = models.ImageField(upload_to='covers/', blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title

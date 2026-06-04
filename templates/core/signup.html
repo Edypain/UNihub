@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-md mx-auto bg-white p-6 rounded shadow">
+    <h2 class="text-2xl font-bold mb-4">Sign Up</h2>
+    <form method="post">
+        {% csrf_token %}
+        
+        <!-- Username -->
+        <div class="mb-4">
+            <label for="{{ form.username.id_for_label }}" class="block text-gray-700 font-medium mb-1">Username</label>
+            <input type="text" name="{{ form.username.name }}" id="{{ form.username.id_for_label }}" 
+                   class="w-full border rounded p-2 {% if form.username.errors %}border-red-500{% endif %}"
+                   value="{{ form.username.value|default:'' }}">
+            {% if form.username.errors %}
+                <p class="text-red-500 text-sm mt-1">{{ form.username.errors.0 }}</p>
+            {% endif %}
+            <p class="text-gray-500 text-xs mt-1">Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.</p>
+        </div>
+
+        <!-- Email -->
+        <div class="mb-4">
+            <label for="{{ form.email.id_for_label }}" class="block text-gray-700 font-medium mb-1">Email address</label>
+            <input type="email" name="{{ form.email.name }}" id="{{ form.email.id_for_label }}" 
+                   class="w-full border rounded p-2 {% if form.email.errors %}border-red-500{% endif %}"
+                   value="{{ form.email.value|default:'' }}">
+            {% if form.email.errors %}
+                <p class="text-red-500 text-sm mt-1">{{ form.email.errors.0 }}</p>
+            {% endif %}
+        </div>
+
+        <!-- Password1 -->
+        <div class="mb-4">
+            <label for="{{ form.password1.id_for_label }}" class="block text-gray-700 font-medium mb-1">Password</label>
+            <input type="password" name="{{ form.password1.name }}" id="{{ form.password1.id_for_label }}" 
+                   class="w-full border rounded p-2 {% if form.password1.errors %}border-red-500{% endif %}">
+            {% if form.password1.errors %}
+                <p class="text-red-500 text-sm mt-1">{{ form.password1.errors.0 }}</p>
+            {% endif %}
+            <ul class="text-gray-500 text-xs mt-1 list-disc pl-4">
+                <li>Your password can’t be too similar to your other personal information.</li>
+                <li>Your password must contain at least 8 characters.</li>
+                <li>Your password can’t be a commonly used password.</li>
+                <li>Your password can’t be entirely numeric.</li>
+            </ul>
+        </div>
+
+        <!-- Password2 -->
+        <div class="mb-4">
+            <label for="{{ form.password2.id_for_label }}" class="block text-gray-700 font-medium mb-1">Password confirmation</label>
+            <input type="password" name="{{ form.password2.name }}" id="{{ form.password2.id_for_label }}" 
+                   class="w-full border rounded p-2 {% if form.password2.errors %}border-red-500{% endif %}">
+            {% if form.password2.errors %}
+                <p class="text-red-500 text-sm mt-1">{{ form.password2.errors.0 }}</p>
+            {% endif %}
+            <p class="text-gray-500 text-xs mt-1">Enter the same password as before, for verification.</p>
+        </div>
+
+        <!-- Department -->
+        <div class="mb-4">
+            <label for="{{ form.department.id_for_label }}" class="block text-gray-700 font-medium mb-1">Department</label>
+            <select name="{{ form.department.name }}" id="{{ form.department.id_for_label }}" 
+                    class="w-full border rounded p-2 {% if form.department.errors %}border-red-500{% endif %}">
+                <option value="">Select your department</option>
+                {% for dept in form.department.field.queryset %}
+                    <option value="{{ dept.pk }}" {% if form.department.value == dept.pk %}selected{% endif %}>{{ dept.name }}</option>
+                {% endfor %}
+            </select>
+            {% if form.department.errors %}
+                <p class="text-red-500 text-sm mt-1">{{ form.department.errors.0 }}</p>
+            {% endif %}
+        </div>
+
+        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded mt-2 hover:bg-blue-600">Sign Up</button>
+    </form>
+    <p class="mt-4">Already have an account? <a href="{% url 'login' %}" class="text-blue-500">Login here</a></p>
+</div>
+{% endblock %}
