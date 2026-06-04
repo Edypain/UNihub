@@ -35,7 +35,7 @@ if not SECRET_KEY:
 # Set to True explicitly so you can catch the specific server crash reason in your browser
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'testserver']
 
 
 # Application definition

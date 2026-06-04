@@ -20,6 +20,7 @@ urlpatterns = [
     path('ai/', ai_views.ai_assistant, name='ai_assistant'),
     path('ai/query/', ai_views.ai_query, name='ai_query'),
     path('profile/', core_views.edit_profile, name='edit_profile'),
+    path('dashboard/', core_views.analytics_dashboard, name='analytics_dashboard'),
     
     # Authentication
     path('login/', auth_views.LoginView.as_view(template_name='core/login.html'), name='login'),

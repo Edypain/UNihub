@@ -199,6 +199,9 @@
 
                         <!-- User Profile Link -->
                         <a href="{% url 'edit_profile' %}" class="text-sm font-semibold hover:text-sky-500 text-slate-600 dark:text-slate-300 transition-colors">Profile</a>
+                        {% if user.is_staff %}
+                            <a href="{% url 'analytics_dashboard' %}" class="text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 transition-colors">Dashboard</a>
+                        {% endif %}
                     {% endif %}
                 </div>
 
@@ -254,6 +257,9 @@
                     <a href="{% url 'upload_book' %}" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-slate-50 dark:hover:bg-slate-800">Upload Book</a>
                     <a href="{% url 'upload_paper' %}" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-slate-50 dark:hover:bg-slate-800">Upload Past Paper</a>
                     <a href="{% url 'edit_profile' %}" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-slate-50 dark:hover:bg-slate-800">Profile</a>
+                    {% if user.is_staff %}
+                        <a href="{% url 'analytics_dashboard' %}" class="block px-3 py-2 rounded-md text-base font-medium text-indigo-600 dark:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800">Dashboard</a>
+                    {% endif %}
                     <div class="pt-4 border-t border-slate-200 dark:border-darkBorder flex items-center justify-between">
                         <span class="text-sm font-semibold text-slate-500">{{ user.username }}</span>
                         <form method="post" action="{% url 'logout' %}" class="inline">
