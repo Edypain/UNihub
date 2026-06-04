@@ -16,6 +16,8 @@ urlpatterns = [
     
     path('papers/', paper_views.paper_list, name='paper_list'),
     path('papers/upload/', paper_views.upload_paper, name='upload_paper'),
+    path('lectures/', paper_views.lecture_list, name='lecture_list'),
+    path('lectures/upload/', paper_views.upload_lecture, name='upload_lecture'),
     
     path('ai/', ai_views.ai_assistant, name='ai_assistant'),
     path('ai/query/', ai_views.ai_query, name='ai_query'),

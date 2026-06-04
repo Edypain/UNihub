@@ -1,8 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .models import PastPaper
-from .forms import PastPaperUploadForm
+from .models import PastPaper, LectureSlide
+from .forms import PastPaperUploadForm, LectureSlideUploadForm
 from core.models import Student
 
 from core.models import Department
@@ -64,6 +64,59 @@ def upload_paper(request):
     else:
         form = PastPaperUploadForm()
     return render(request, 'papers/upload.html', {'form': form})
+
+
+@login_required
+def lecture_list(request):
+    departments = Department.objects.all()
+    lectures = LectureSlide.objects.all().order_by('-uploaded_at')
+
+    if request.user.is_authenticated:
+        student, created = Student.objects.get_or_create(user=request.user)
+        query = request.GET.get('q', '').strip()
+        dept_id = request.GET.get('dept', '').strip()
+
+        if query:
+            lectures = lectures.filter(
+                Q(title__icontains=query) |
+                Q(description__icontains=query) |
+                Q(course_code__icontains=query)
+            )
+        if dept_id:
+            lectures = lectures.filter(department_id=dept_id)
+
+        if not (query or dept_id) and student.department:
+            lectures = lectures.filter(department=student.department)
+    else:
+        lectures = LectureSlide.objects.none()
+
+    context = {
+        'lectures': lectures,
+        'departments': departments,
+    }
+    return render(request, 'lectures/list.html', context)
+
+
+@login_required
+def upload_lecture(request):
+    student, created = Student.objects.get_or_create(user=request.user)
+    if student.department is None:
+        messages.error(request, 'You must set your department before uploading a lecture slide. Please update your profile.')
+        return redirect('edit_profile')
+
+    if request.method == 'POST':
+        form = LectureSlideUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            lecture = form.save(commit=False)
+            lecture.uploaded_by = request.user
+            lecture.department = student.department
+            lecture.save()
+            messages.success(request, 'Lecture slide uploaded successfully!')
+            return redirect('lecture_list')
+    else:
+        form = LectureSlideUploadForm()
+    return render(request, 'lectures/upload.html', {'form': form})
+
 
 def view_pdf(request, paper_id):
     paper = get_object_or_404(PastPaper, id=paper_id)
