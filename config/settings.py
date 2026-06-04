@@ -23,13 +23,21 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / '.env')
 
 
+def get_env_value(name, default=None, required=False):
+    value = os.getenv(name, default)
+    if required and not value:
+        raise ImproperlyConfigured(f"The {name} environment variable is required.")
+    return value
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY')
-if not SECRET_KEY:
-    raise ImproperlyConfigured("The SECRET_KEY environment variable is required.")
+if os.getenv('VERCEL') or os.getenv('VERCEL_ENV'):
+    SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-vercel-build-fallback')
+else:
+    SECRET_KEY = get_env_value('SECRET_KEY', required=True)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # Set to True explicitly so you can catch the specific server crash reason in your browser
@@ -149,8 +157,6 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # Third-party configurations
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
-if not GEMINI_API_KEY:
-    raise ImproperlyConfigured("The GEMINI_API_KEY environment variable is required.")
 
 
 # Login/Logout redirects
