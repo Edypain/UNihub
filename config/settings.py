@@ -43,7 +43,11 @@ else:
 # Set to True explicitly so you can catch the specific server crash reason in your browser
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'testserver']
+default_allowed_hosts = ['127.0.0.1', 'localhost', 'testserver']
+allowed_hosts_env = os.getenv('ALLOWED_HOSTS', '')
+ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_env.split(',') if host.strip()] or default_allowed_hosts
+if os.getenv('VERCEL_URL'):
+    ALLOWED_HOSTS.append(os.getenv('VERCEL_URL'))
 
 
 # Application definition
