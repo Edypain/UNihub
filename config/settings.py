@@ -105,12 +105,49 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if os.getenv('VERCEL') or os.getenv('VERCEL_ENV'):
+    # Vercel file system is read-only except /tmp, so store SQLite there for runtime use.
+    default_db_path = Path('/tmp/db.sqlite3')
+else:
+    default_db_path = BASE_DIR / 'db.sqlite3'
+
+# PostgreSQL support: use DATABASE_URL or explicit POSTGRES_* env vars.
+DATABASE_URL = os.getenv('DATABASE_URL')
+if DATABASE_URL:
+    from urllib.parse import urlparse
+
+    parsed_db_url = urlparse(DATABASE_URL)
+    if parsed_db_url.scheme not in ('postgres', 'postgresql'):
+        raise ImproperlyConfigured('DATABASE_URL must be a Postgres URL.')
+
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': parsed_db_url.path.lstrip('/'),
+            'USER': parsed_db_url.username or '',
+            'PASSWORD': parsed_db_url.password or '',
+            'HOST': parsed_db_url.hostname or '',
+            'PORT': parsed_db_url.port or '',
+        }
     }
-}
+elif os.getenv('POSTGRES_DB'):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('POSTGRES_DB'),
+            'USER': os.getenv('POSTGRES_USER', ''),
+            'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
+            'HOST': os.getenv('POSTGRES_HOST', 'localhost'),
+            'PORT': os.getenv('POSTGRES_PORT', '5432'),
+        }
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': Path(os.getenv('DATABASE_PATH', default_db_path)),
+        }
+    }
 
 
 # Password validation
