@@ -35,19 +35,30 @@ else:
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-# Explicitly added your Vercel URL and the general Vercel subdomain wildcard
+# 1. Standard base allowed hosts for local development and your specific Vercel URL
 default_allowed_hosts = [
     '127.0.0.1', 
     'localhost', 
     'testserver',
-    'u-nihub-ooe4.vercel.app',
-    '.vercel.app'
+    'u-nihub-dq4v.vercel.app',  # <-- Your explicitly requested URL is here
 ]
+
+# 2. Extract hosts from environment variables if explicitly configured
 allowed_hosts_env = os.getenv('ALLOWED_HOSTS', '')
 ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_env.split(',') if host.strip()] or default_allowed_hosts
 
-if os.getenv('VERCEL_URL'):
-    ALLOWED_HOSTS.append(os.getenv('VERCEL_URL'))
+# 3. Dynamic Host Wildcard handling specifically for Vercel Serverless Deployments
+if os.getenv('VERCEL') or os.getenv('VERCEL_ENV'):
+    # The leading dot acts as a wildcard, catching any vercel.app subdomain
+    if '.vercel.app' not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append('.vercel.app')
+    
+    # Process Vercel's absolute system environment variables
+    vercel_url = os.getenv('VERCEL_URL')
+    if vercel_url:
+        ALLOWED_HOSTS.append(vercel_url)
+        if not vercel_url.startswith('.'):
+            ALLOWED_HOSTS.append(f".{vercel_url}")
 
 
 # Application definition
