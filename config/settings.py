@@ -19,7 +19,6 @@ load_dotenv(BASE_DIR / '.env')
 # VERCEL BUILD & FORMATTING SHIELD
 # =========================================================
 _cloud_url = os.environ.get('CLOUDINARY_URL', '')
-USE_CLOUDINARY = _cloud_url.startswith('cloudinary://') and 'build-fallback' not in _cloud_url and 'dummy-cloud' not in _cloud_url
 
 
 def get_env_value(name, default=None, required=False):
@@ -36,6 +35,7 @@ else:
     SECRET_KEY = get_env_value('SECRET_KEY', required=True)
 
 DEBUG = True
+USE_CLOUDINARY = False if DEBUG else (_cloud_url.startswith('cloudinary://') and 'build-fallback' not in _cloud_url and 'dummy-cloud' not in _cloud_url)
 
 default_allowed_hosts = [
     '127.0.0.1', 
