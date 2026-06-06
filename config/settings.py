@@ -64,6 +64,13 @@ if os.getenv('VERCEL') or os.getenv('VERCEL_ENV'):
         if not vercel_url.startswith('.'):
             ALLOWED_HOSTS.append(f".{vercel_url}")
 
+# Render host detection
+render_host = os.getenv('RENDER_EXTERNAL_HOSTNAME')
+if render_host:
+    ALLOWED_HOSTS.append(render_host)
+    if not render_host.startswith('.'):
+        ALLOWED_HOSTS.append(f".{render_host}")
+
 
 # Application definition
 INSTALLED_APPS = [
