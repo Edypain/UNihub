@@ -49,6 +49,7 @@ default_allowed_hosts = [
     'localhost', 
     'testserver',
     'u-nihub-dq4v.vercel.app',  
+    'unihub-nvx9.onrender.com',
 ]
 
 allowed_hosts_env = os.getenv('ALLOWED_HOSTS', '')
