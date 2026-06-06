@@ -17,6 +17,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Load environment variables
 load_dotenv(BASE_DIR / '.env')
 
+# =========================================================
+# VERCEL BUILD FALLBACK SHIELD
+# Prevents ValueError during collectstatic deployment phase
+# =========================================================
+if not os.getenv('CLOUDINARY_URL'):
+    os.environ['CLOUDINARY_URL'] = 'cloudinary://build-fallback:fallback@dummy-cloud'
+
 
 def get_env_value(name, default=None, required=False):
     value = os.getenv(name, default)
