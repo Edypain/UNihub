@@ -11,14 +11,9 @@ class CourseInline(admin.TabularInline):
 
 
 class DepartmentAdmin(admin.ModelAdmin):
-    list_display = ['name', 'code', 'course_count']
+    list_display = ['name', 'code']
     search_fields = ['name', 'code']
-    inlines = [CourseInline]
-    
-    def course_count(self, obj):
-        count = obj.courses.count()
-        return f"{count} course{'s' if count != 1 else ''}"
-    course_count.short_description = "Courses"
+    fields = ['name', 'code']
 
 
 class CourseAdmin(admin.ModelAdmin):
