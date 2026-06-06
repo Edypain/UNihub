@@ -63,6 +63,8 @@ if os.getenv('VERCEL') or os.getenv('VERCEL_ENV'):
 
 # Application definition
 INSTALLED_APPS = [
+    'cloudinary_storage', 
+    'cloudinary',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -162,13 +164,30 @@ INTERNAL_IPS = [
     "127.0.0.1",
 ]
 
-# Media files configuration
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
-
 # Third-party configurations
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 
+# ==========================================
+# MEDIA & CLOUDINARY CONFIGURATION
+# ==========================================
+MEDIA_URL = '/media/'
+
+# Cloudinary configuration (it will automatically find the CLOUDINARY_URL in your .env / Vercel vars)
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'), 
+}
+
+# Modern Django 4.2+ / 6.0 storage configuration
+STORAGES = {
+    "default": {
+        # This tells Django to send all user uploads to Cloudinary
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+    },
+    "staticfiles": {
+        # Keep your static files handling the same
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
 
 # Login/Logout redirects
 LOGIN_REDIRECT_URL = '/'
