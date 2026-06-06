@@ -34,8 +34,15 @@ if os.getenv('VERCEL') or os.getenv('VERCEL_ENV'):
 else:
     SECRET_KEY = get_env_value('SECRET_KEY', required=True)
 
-DEBUG = True
-USE_CLOUDINARY = False if DEBUG else (_cloud_url.startswith('cloudinary://') and 'build-fallback' not in _cloud_url and 'dummy-cloud' not in _cloud_url)
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
+
+# Use Cloudinary if CLOUDINARY_URL is configured AND we are in production/Vercel (or explicitly enabled)
+USE_CLOUDINARY = os.getenv('USE_CLOUDINARY', 'False') == 'True'
+if not USE_CLOUDINARY:
+    _is_vercel = os.getenv('VERCEL') is not None or os.getenv('VERCEL_ENV') is not None
+    _is_prod_or_vercel = not DEBUG or _is_vercel
+    if _is_prod_or_vercel and _cloud_url.startswith('cloudinary://') and 'build-fallback' not in _cloud_url and 'dummy-cloud' not in _cloud_url:
+        USE_CLOUDINARY = True
 
 default_allowed_hosts = [
     '127.0.0.1', 
@@ -147,9 +154,13 @@ GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
-}
+CLOUDINARY_STORAGE = {}
+if os.getenv('CLOUDINARY_CLOUD_NAME'):
+    CLOUDINARY_STORAGE['CLOUD_NAME'] = os.getenv('CLOUDINARY_CLOUD_NAME')
+if os.getenv('CLOUDINARY_API_KEY'):
+    CLOUDINARY_STORAGE['API_KEY'] = os.getenv('CLOUDINARY_API_KEY')
+if os.getenv('CLOUDINARY_API_SECRET'):
+    CLOUDINARY_STORAGE['API_SECRET'] = os.getenv('CLOUDINARY_API_SECRET')
 
 # Explicitly defining legacy settings to stop AttributeError
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
