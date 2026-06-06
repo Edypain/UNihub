@@ -150,6 +150,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles_build' / 'static'
+WHITENOISE_MANIFEST_STRICT = False
 
 TAILWIND_APP_NAME = 'theme'
 
