@@ -18,10 +18,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / '.env')
 
 # =========================================================
-# VERCEL BUILD FALLBACK SHIELD
-# Prevents ValueError during collectstatic deployment phase
+# VERCEL BUILD & FORMATTING SHIELD
+# Prevents crashes if Vercel vars are missing or have quotes
 # =========================================================
-if not os.getenv('CLOUDINARY_URL'):
+_cloud_url = os.environ.get('CLOUDINARY_URL', '')
+if not _cloud_url.startswith('cloudinary://'):
     os.environ['CLOUDINARY_URL'] = 'cloudinary://build-fallback:fallback@dummy-cloud'
 
 
@@ -47,7 +48,7 @@ default_allowed_hosts = [
     '127.0.0.1', 
     'localhost', 
     'testserver',
-    'u-nihub-dq4v.vercel.app',  # <-- Your explicitly requested URL is here
+    'u-nihub-dq4v.vercel.app',  
 ]
 
 # 2. Extract hosts from environment variables if explicitly configured
@@ -56,11 +57,9 @@ ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_env.split(',') if host.s
 
 # 3. Dynamic Host Wildcard handling specifically for Vercel Serverless Deployments
 if os.getenv('VERCEL') or os.getenv('VERCEL_ENV'):
-    # The leading dot acts as a wildcard, catching any vercel.app subdomain
     if '.vercel.app' not in ALLOWED_HOSTS:
         ALLOWED_HOSTS.append('.vercel.app')
     
-    # Process Vercel's absolute system environment variables
     vercel_url = os.getenv('VERCEL_URL')
     if vercel_url:
         ALLOWED_HOSTS.append(vercel_url)
@@ -92,15 +91,13 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    # WhiteNoise is highly recommended for serving static files on Vercel
-    # 'whitenoise.middleware.WhiteNoiseMiddleware', 
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'core.middleware.AdminAccessMiddleware',  # Restrict admin access
+    'core.middleware.AdminAccessMiddleware',  
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -123,10 +120,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 
-# Database
-# Using dj_database_url handles the Postgres connection string automatically 
-# while falling back to SQLite for local development.
-
 DATABASES = {
     'default': dj_database_url.config(
         default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
@@ -135,7 +128,6 @@ DATABASES = {
     )
 }
 
-# Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -152,17 +144,12 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# Internationalization
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'
-
-# Vercel requires STATIC_ROOT to know where to collect files during the build process
 STATIC_ROOT = BASE_DIR / 'staticfiles_build' / 'static'
 
 TAILWIND_APP_NAME = 'theme'
@@ -171,7 +158,6 @@ INTERNAL_IPS = [
     "127.0.0.1",
 ]
 
-# Third-party configurations
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 
 # ==========================================
@@ -179,24 +165,19 @@ GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 # ==========================================
 MEDIA_URL = '/media/'
 
-# Cloudinary configuration (it will automatically find the CLOUDINARY_URL in your .env / Vercel vars)
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'), 
 }
 
-# Modern Django 4.2+ / 6.0 storage configuration
 STORAGES = {
     "default": {
-        # This tells Django to send all user uploads to Cloudinary
         "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
     },
     "staticfiles": {
-        # Keep your static files handling the same
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
 
-# Login/Logout redirects
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 LOGIN_URL = '/login/'
