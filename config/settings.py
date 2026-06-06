@@ -19,8 +19,7 @@ load_dotenv(BASE_DIR / '.env')
 # VERCEL BUILD & FORMATTING SHIELD
 # =========================================================
 _cloud_url = os.environ.get('CLOUDINARY_URL', '')
-if not _cloud_url.startswith('cloudinary://'):
-    os.environ['CLOUDINARY_URL'] = 'cloudinary://build-fallback:fallback@dummy-cloud'
+USE_CLOUDINARY = _cloud_url.startswith('cloudinary://') and 'build-fallback' not in _cloud_url and 'dummy-cloud' not in _cloud_url
 
 
 def get_env_value(name, default=None, required=False):
@@ -146,23 +145,37 @@ GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 # MEDIA & CLOUDINARY CONFIGURATION
 # ==========================================
 MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'), 
+    'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
 }
 
 # Explicitly defining legacy settings to stop AttributeError
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-
-STORAGES = {
-    "default": {
-        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
-    },
-    "staticfiles": {
-        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-    },
-}
+if USE_CLOUDINARY:
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    STORAGES = {
+        'default': {
+            'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage',
+        },
+        'staticfiles': {
+            'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+        },
+    }
+else:
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+    STORAGES = {
+        'default': {
+            'BACKEND': 'django.core.files.storage.FileSystemStorage',
+            'OPTIONS': {
+                'location': MEDIA_ROOT,
+            },
+        },
+        'staticfiles': {
+            'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+        },
+    }
 
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
