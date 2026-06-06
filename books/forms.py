@@ -27,6 +27,8 @@ class BookUploadForm(forms.ModelForm):
             'tags': forms.TextInput(attrs={'placeholder': 'e.g., python, django, web'}),
         }
 
+    cover_image = forms.ImageField(required=False, help_text='Optional cover image for the book.')
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         

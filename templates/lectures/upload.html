@@ -1,12 +1,52 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="max-w-lg mx-auto bg-white p-6 rounded shadow">
-    <h1 class="text-2xl font-bold mb-4">Upload Lecture Slide</h1>
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded mt-2">Upload Lecture Slide</button>
-    </form>
+<div class="min-h-screen flex items-center justify-center px-4 py-12">
+    <div class="w-full max-w-2xl bg-white dark:bg-darkCard rounded-2xl shadow-xl p-8">
+        <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-4">Upload Lecture Slide</h1>
+
+        <form method="post" enctype="multipart/form-data" class="space-y-4">
+            {% csrf_token %}
+
+            <div>
+                <label for="{{ form.title.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Title</label>
+                <input type="text" name="{{ form.title.name }}" id="{{ form.title.id_for_label }}" value="{{ form.title.value|default:'' }}" class="mt-2 w-full rounded-xl border border-slate-200 dark:border-darkBorder px-4 py-2 bg-white dark:bg-darkBg text-sm">
+                {% if form.title.errors %}<p class="text-red-600 text-sm mt-1">{{ form.title.errors.0 }}</p>{% endif %}
+            </div>
+
+            <div>
+                <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Description (optional)</label>
+                <textarea name="{{ form.description.name }}" id="{{ form.description.id_for_label }}" rows="3" class="mt-2 w-full rounded-xl border border-slate-200 dark:border-darkBorder px-4 py-2 bg-white dark:bg-darkBg text-sm">{{ form.description.value|default:'' }}</textarea>
+                {% if form.description.errors %}<p class="text-red-600 text-sm mt-1">{{ form.description.errors.0 }}</p>{% endif %}
+            </div>
+
+            <div>
+                <label for="{{ form.course_code.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Course code</label>
+                <input type="text" name="{{ form.course_code.name }}" id="{{ form.course_code.id_for_label }}" value="{{ form.course_code.value|default:'' }}" class="mt-2 w-full rounded-xl border border-slate-200 dark:border-darkBorder px-4 py-2 bg-white dark:bg-darkBg text-sm" placeholder="e.g., PHY111">
+                {% if form.course_code.errors %}<p class="text-red-600 text-sm mt-1">{{ form.course_code.errors.0 }}</p>{% endif %}
+            </div>
+
+            <div>
+                <label for="{{ form.slide_file.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Slide file</label>
+                <input type="file" name="{{ form.slide_file.name }}" id="{{ form.slide_file.id_for_label }}" class="mt-2 w-full text-sm" required>
+                <p id="slideName" class="text-xs text-slate-500 mt-1"></p>
+                {% if form.slide_file.errors %}<p class="text-red-600 text-sm mt-1">{{ form.slide_file.errors.0 }}</p>{% endif %}
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button type="submit" class="inline-flex items-center justify-center rounded-2xl bg-sky-600 px-5 py-3 text-sm font-semibold text-white shadow hover:bg-sky-700">Upload Slide</button>
+                <a href="{% url 'lecture_list' %}" class="text-sm text-slate-500 hover:underline">Cancel</a>
+            </div>
+        </form>
+    </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+    const slideInput = document.getElementById('{{ form.slide_file.id_for_label }}');
+    const slideName = document.getElementById('slideName');
+    if(slideInput){ slideInput.addEventListener('change', e => { const f=e.target.files[0]; slideName.textContent = f ? f.name : ''; }); }
+});
+</script>
+
 {% endblock %}

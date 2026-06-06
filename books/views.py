@@ -7,6 +7,15 @@ from .forms import BookUploadForm
 from core.models import Student
 
 from core.models import Department
+from django.core.files.base import ContentFile
+from django.utils.text import slugify
+import uuid
+
+# Optional PDF rendering dependency (PyMuPDF)
+try:
+    import fitz
+except Exception:
+    fitz = None
 
 def book_list(request):
     query = request.GET.get('q', '').strip()
@@ -67,6 +76,34 @@ def upload_book(request):
         if form.is_valid():
             book = form.save(commit=False)
             book.department = student.department
+
+            # Ensure PDF is saved and attempt to create a cover image from its first page
+            uploaded_pdf = form.cleaned_data.get('pdf_file')
+            if uploaded_pdf:
+                try:
+                    pdf_bytes = uploaded_pdf.read()
+                    # Save PDF file to the model filefield
+                    book.pdf_file.save(uploaded_pdf.name, ContentFile(pdf_bytes), save=False)
+
+                    # If PyMuPDF is available, render first page to PNG and save as cover_image
+                    if fitz is not None:
+                        try:
+                            doc = fitz.open(stream=pdf_bytes, filetype='pdf')
+                            if doc.page_count > 0:
+                                page = doc.load_page(0)
+                                mat = fitz.Matrix(2, 2)  # render at higher res
+                                pix = page.get_pixmap(matrix=mat, alpha=False)
+                                img_bytes = pix.tobytes('png')
+                                img_name = f"{slugify(book.title)[:40]}-{uuid.uuid4().hex[:8]}.png"
+                                book.cover_image.save(img_name, ContentFile(img_bytes), save=False)
+                        except Exception:
+                            # If rendering fails, continue without a cover image
+                            pass
+                except Exception:
+                    # If reading/saving PDF fails, fall back to normal save (form will still have pdf_file assigned)
+                    pass
+
+            # Final save
             book.save()
             messages.success(request, 'Book uploaded successfully!')
             return redirect('book_list')
