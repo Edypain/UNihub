@@ -14,8 +14,9 @@ class AdminAccessMiddleware:
     def __call__(self, request):
         # Check if user is trying to access admin
         if request.path.startswith('/admin/'):
-            # Allow access only if user is staff or superuser
-            if not request.user.is_staff and not request.user.is_superuser:
+            # Allow anonymous users to reach admin login (handled by Django admin itself),
+            # but redirect logged-in users who are not staff/superuser.
+            if request.user.is_authenticated and not request.user.is_staff and not request.user.is_superuser:
                 messages.warning(request, 'You do not have permission to access the admin panel.')
                 return redirect('home')
         
