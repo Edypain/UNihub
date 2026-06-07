@@ -172,31 +172,61 @@ if os.getenv('CLOUDINARY_API_KEY'):
 if os.getenv('CLOUDINARY_API_SECRET'):
     CLOUDINARY_STORAGE['API_SECRET'] = os.getenv('CLOUDINARY_API_SECRET')
 
-# Explicitly defining legacy settings to stop AttributeError
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
-if USE_CLOUDINARY:
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-    STORAGES = {
-        'default': {
-            'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage',
-        },
-        'staticfiles': {
-            'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
-        },
-    }
-else:
-    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
-    STORAGES = {
-        'default': {
-            'BACKEND': 'django.core.files.storage.FileSystemStorage',
-            'OPTIONS': {
-                'location': MEDIA_ROOT,
+# Environment-aware storage configuration logic
+IS_PYTHONANYWHERE = 'pythonanywhere' in os.environ.get('HOME', '')
+
+if IS_PYTHONANYWHERE:
+    # Use standard storage settings on PythonAnywhere to bypass WhiteNoise processing crashes
+    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+    if USE_CLOUDINARY:
+        DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+        STORAGES = {
+            'default': {
+                'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage',
             },
-        },
-        'staticfiles': {
-            'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
-        },
-    }
+            'staticfiles': {
+                'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+            },
+        }
+    else:
+        DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+        STORAGES = {
+            'default': {
+                'BACKEND': 'django.core.files.storage.FileSystemStorage',
+                'OPTIONS': {
+                    'location': MEDIA_ROOT,
+                },
+            },
+            'staticfiles': {
+                'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+            },
+        }
+else:
+    # Standard optimized configuration block for Vercel, Render, and Local environments
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+    if USE_CLOUDINARY:
+        DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+        STORAGES = {
+            'default': {
+                'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage',
+            },
+            'staticfiles': {
+                'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
+            },
+        }
+    else:
+        DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+        STORAGES = {
+            'default': {
+                'BACKEND': 'django.core.files.storage.FileSystemStorage',
+                'OPTIONS': {
+                    'location': MEDIA_ROOT,
+                },
+            },
+            'staticfiles': {
+                'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
+            },
+        }
 
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
