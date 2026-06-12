@@ -5,7 +5,7 @@ from django.contrib import messages
 from .forms import StudentSignUpForm
 from .models import Department, Student
 from books.models import Book
-from papers.models import PastPaper
+from papers.models import PastPaper, LectureSlide
 from django.contrib.auth.models import User
 from django.db.models import Count
 from django.db.models.functions import TruncDate
@@ -13,6 +13,8 @@ from django.db.models.functions import TruncDate
 def home(request):
     recent_books = Book.objects.all().order_by('-created_at')[:6]
     recent_papers = PastPaper.objects.all().order_by('-uploaded_at')[:6]
+    recent_lectures = LectureSlide.objects.all().order_by('-uploaded_at')[:6]
+    lecture_count = LectureSlide.objects.count()
     
     recommended_books = []
     if request.user.is_authenticated and hasattr(request.user, 'student') and request.user.student.department:
@@ -24,6 +26,8 @@ def home(request):
     context = {
         'recent_books': recent_books,
         'recent_papers': recent_papers,
+        'recent_lectures': recent_lectures,
+        'lecture_count': lecture_count,
         'recommended_books': recommended_books,
     }
     return render(request, 'core/home.html', context)
@@ -71,6 +75,7 @@ def analytics_dashboard(request):
     total_departments = Department.objects.count()
     total_books = Book.objects.count()
     total_papers = PastPaper.objects.count()
+    total_lectures = LectureSlide.objects.count()
 
     # 2. User Signups Over Time (Grouped by Date)
     signups_by_date = (
@@ -149,6 +154,7 @@ def analytics_dashboard(request):
         'total_departments': total_departments,
         'total_books': total_books,
         'total_papers': total_papers,
+        'total_lectures': total_lectures,
         'signup_history': signup_history,
         'department_distribution': department_distribution,
         'department_resources': department_resources,

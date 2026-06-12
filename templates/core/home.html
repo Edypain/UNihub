@@ -30,6 +30,10 @@
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                 <span>Past Papers</span>
             </a>
+            <a href="{% url 'lecture_list' %}" class="bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 px-7 rounded-xl shadow-lg transition-all duration-200 transform hover:-translate-y-1 hover:shadow-xl flex items-center space-x-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.5v15m-5.25-5.25L12 20.25l5.25-5.25M6.75 11.25L12 5.25l5.25 6"></path></svg>
+                <span>Lecture Slides</span>
+            </a>
             <a href="{% url 'ai_assistant' %}" class="bg-indigo-500/80 hover:bg-indigo-500 backdrop-blur-md border border-white/20 text-white font-bold py-3 px-7 rounded-xl shadow-lg transition-all duration-200 transform hover:-translate-y-1 hover:shadow-xl flex items-center space-x-2">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m1.636-6.364l.707.707M12 21a9 9 0 100-18 9 9 0 000 18z"></path></svg>
                 <span>AI Tutor</span>
@@ -40,7 +44,7 @@
 
 <!-- Stats Row -->
 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-    {% with book_count=recent_books|length paper_count=recent_papers|length %}
+    {% with book_count=recent_books|length paper_count=recent_papers|length lecture_count=lecture_count %}
     <div class="glass-card rounded-2xl p-5 text-center shadow-sm hover:shadow-md transition-all group">
         <div class="text-3xl font-extrabold font-display text-sky-500 group-hover:scale-110 transition-transform">📚</div>
         <div class="text-2xl font-bold mt-1 text-slate-800 dark:text-slate-100">Books</div>
@@ -51,12 +55,13 @@
         <div class="text-2xl font-bold mt-1 text-slate-800 dark:text-slate-100">Papers</div>
         <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">Past Examinations</div>
     </div>
-    {% endwith %}
     <div class="glass-card rounded-2xl p-5 text-center shadow-sm hover:shadow-md transition-all group">
-        <div class="text-3xl font-extrabold font-display text-purple-500 group-hover:scale-110 transition-transform">🤖</div>
-        <div class="text-2xl font-bold mt-1 text-slate-800 dark:text-slate-100">AI Tutor</div>
-        <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">24/7 Study Assistant</div>
+        <div class="text-3xl font-extrabold font-display text-sky-500 group-hover:scale-110 transition-transform">🖥️</div>
+        <div class="text-2xl font-bold mt-1 text-slate-800 dark:text-slate-100">Lecture Slides</div>
+        <div class="text-4xl font-extrabold text-slate-900 dark:text-white mt-2">{{ lecture_count }}</div>
+        <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">Newest classroom slides</div>
     </div>
+    {% endwith %}
     <div class="glass-card rounded-2xl p-5 text-center shadow-sm hover:shadow-md transition-all group">
         <div class="text-3xl font-extrabold font-display text-amber-500 group-hover:scale-110 transition-transform">🎓</div>
         <div class="text-2xl font-bold mt-1 text-slate-800 dark:text-slate-100">Depts</div>
@@ -229,6 +234,54 @@
         <h3 class="font-bold text-slate-600 dark:text-slate-400">No past papers yet</h3>
         <p class="text-sm text-slate-400 dark:text-slate-500 mt-1">Help your classmates by uploading exam papers.</p>
         <a href="{% url 'upload_paper' %}" class="mt-4 inline-block text-sm font-bold text-emerald-500 hover:text-emerald-600">Upload a paper →</a>
+    </div>
+    {% endif %}
+</section>
+
+<section class="mb-12">
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h2 class="text-2xl font-bold font-display text-slate-800 dark:text-slate-100">🖥️ Recent Lecture Slides</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Latest shared lecture materials from your peers.</p>
+        </div>
+        <a href="{% url 'lecture_list' %}" class="text-sky-500 hover:text-sky-600 text-sm font-semibold flex items-center space-x-1">
+            <span>View all</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+        </a>
+    </div>
+    {% if recent_lectures %}
+    <div class="glass-card rounded-2xl overflow-hidden shadow-sm">
+        <table class="min-w-full">
+            <thead>
+                <tr class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-darkBorder">
+                    <th class="py-3 px-5 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Title</th>
+                    <th class="py-3 px-5 text-left text-xs font-bold text-slate-500 uppercase tracking-wider hidden sm:table-cell">Course</th>
+                    <th class="py-3 px-5 text-left text-xs font-bold text-slate-500 uppercase tracking-wider hidden md:table-cell">Department</th>
+                    <th class="py-3 px-5 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Action</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-darkBorder">
+                {% for lecture in recent_lectures %}
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors group">
+                    <td class="py-3 px-5 font-medium text-slate-800 dark:text-slate-200 text-sm">{{ lecture.title }}</td>
+                    <td class="py-3 px-5 text-sm text-slate-500 dark:text-slate-400 hidden sm:table-cell">{{ lecture.course_code }}</td>
+                    <td class="py-3 px-5 text-sm text-slate-500 dark:text-slate-400 hidden md:table-cell">{{ lecture.department.code }}</td>
+                    <td class="py-3 px-5 text-right">
+                        <a href="{{ lecture.slide_file.url }}" target="_blank" class="text-xs font-bold text-sky-600 dark:text-sky-400 hover:text-sky-500 bg-sky-50 dark:bg-sky-900/30 px-3 py-1.5 rounded-lg transition-colors">
+                            Open Slide
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="glass-card rounded-2xl p-12 text-center border-dashed">
+        <div class="text-5xl mb-3">🖥️</div>
+        <h3 class="font-bold text-slate-600 dark:text-slate-400">No lecture slides yet</h3>
+        <p class="text-sm text-slate-400 dark:text-slate-500 mt-1">Upload your lecture slide to help classmates prepare.</p>
+        <a href="{% url 'upload_lecture' %}" class="mt-4 inline-block text-sm font-bold text-sky-500 hover:text-sky-600">Upload a lecture slide →</a>
     </div>
     {% endif %}
 </section>
