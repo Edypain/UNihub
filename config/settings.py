@@ -187,21 +187,23 @@ AWS_S3_REGION_NAME = os.getenv('AWS_S3_REGION_NAME', 'us-east-1')
 AWS_S3_SIGNATURE_VERSION = os.getenv('AWS_S3_SIGNATURE_VERSION', 's3v4')
 AWS_S3_FILE_OVERWRITE = False
 AWS_DEFAULT_ACL = None
-
-# Force clean, signature-free public links for public bucket architecture
-AWS_QUERYSTRING_AUTH = os.getenv('AWS_QUERYSTRING_AUTH', 'False') == 'True'
+AWS_QUERYSTRING_AUTH = False 
 
 USE_SUPABASE_STORAGE = all([AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_STORAGE_BUCKET_NAME, AWS_S3_ENDPOINT_URL])
+
+# Dynamically construct the Public CDN Custom Domain if using Supabase
+if USE_SUPABASE_STORAGE:
+    # Strips "https://" and "/storage/v1/s3" out to isolate clean project domain string
+    _clean_domain = AWS_S3_ENDPOINT_URL.replace('https://', '').replace('http://', '').split('/storage/v1/s3')[0]
+    AWS_S3_CUSTOM_DOMAIN = f"{_clean_domain}/storage/v1/object/public/{AWS_STORAGE_BUCKET_NAME}"
 
 # Environment-aware storage configuration logic
 IS_PYTHONANYWHERE = 'pythonanywhere' in os.environ.get('HOME', '')
 
 if USE_SUPABASE_STORAGE:
-    # Set legacy variables required for full library backward-compatibility
     DEFAULT_FILE_STORAGE = 'storages.backends.s3.S3Storage'
     STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage' if IS_PYTHONANYWHERE else 'whitenoise.storage.CompressedStaticFilesStorage'
     
-    # Modern Django 4.2+ mapping
     STORAGES = {
         'default': {
             'BACKEND': DEFAULT_FILE_STORAGE,
@@ -211,11 +213,9 @@ if USE_SUPABASE_STORAGE:
         },
     }
 elif IS_PYTHONANYWHERE:
-    # Set legacy variables required for full library backward-compatibility
     STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage' if USE_CLOUDINARY else 'django.core.files.storage.FileSystemStorage'
     
-    # Modern Django 4.2+ mapping
     STORAGES = {
         'default': {
             'BACKEND': DEFAULT_FILE_STORAGE,
@@ -225,11 +225,9 @@ elif IS_PYTHONANYWHERE:
         },
     }
 else:
-    # Set legacy variables required for full library backward-compatibility
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage' if USE_CLOUDINARY else 'django.core.files.storage.FileSystemStorage'
     
-    # Modern Django 4.2+ mapping
     STORAGES = {
         'default': {
             'BACKEND': DEFAULT_FILE_STORAGE,
