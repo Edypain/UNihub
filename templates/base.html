@@ -254,6 +254,7 @@
             <div class="space-y-1">
                 <a href="{% url 'book_list' %}" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-slate-50 dark:hover:bg-slate-800">Books</a>
                 <a href="{% url 'paper_list' %}" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-slate-50 dark:hover:bg-slate-800">Past Papers</a>
+                <a href="{% url 'lecture_list' %}" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-slate-50 dark:hover:bg-slate-800">Lecture Slides</a>
                 <a href="{% url 'ai_assistant' %}" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-slate-50 dark:hover:bg-slate-800 text-sky-500">AI Assistant</a>
                 {% if user.is_authenticated %}
                     <a href="{% url 'upload_book' %}" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-slate-50 dark:hover:bg-slate-800">Upload Book</a>
