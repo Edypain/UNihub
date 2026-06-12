@@ -22,8 +22,9 @@ RUN pip install --no-cache-dir --upgrade pip \
 # Copy the remaining application source files
 COPY . /app/
 
-# Set a fallback SECRET_KEY for build commands
+# Set a fallback SECRET_KEY and dummy CLOUDINARY_URL for build commands
 ENV SECRET_KEY=django-insecure-build-fallback
+ENV CLOUDINARY_URL=cloudinary://dummy:dummy@dummy
 
 # Build tailwind styles and collect static files
 RUN python manage.py tailwind build \
