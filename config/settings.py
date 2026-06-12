@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load environment variables
+# Load environment variables (fails silently if .env doesn't exist, which is perfect for Vercel)
 load_dotenv(BASE_DIR / '.env')
 
 # =========================================================
@@ -20,13 +20,11 @@ load_dotenv(BASE_DIR / '.env')
 # =========================================================
 _cloud_url = os.environ.get('CLOUDINARY_URL', '')
 
-
 def get_env_value(name, default=None, required=False):
     value = os.getenv(name, default)
     if required and not value:
         raise ImproperlyConfigured(f"The {name} environment variable is required.")
     return value
-
 
 # Quick-start development settings
 if os.getenv('VERCEL') or os.getenv('VERCEL_ENV'):
@@ -55,6 +53,7 @@ default_allowed_hosts = [
 allowed_hosts_env = os.getenv('ALLOWED_HOSTS', '')
 ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_env.split(',') if host.strip()] or default_allowed_hosts
 
+# Vercel host detection
 if os.getenv('VERCEL') or os.getenv('VERCEL_ENV'):
     if '.vercel.app' not in ALLOWED_HOSTS:
         ALLOWED_HOSTS.append('.vercel.app')
@@ -71,7 +70,6 @@ if render_host:
     ALLOWED_HOSTS.append(render_host)
     if not render_host.startswith('.'):
         ALLOWED_HOSTS.append(f".{render_host}")
-
 
 # Application definition
 INSTALLED_APPS = [
@@ -91,7 +89,6 @@ INSTALLED_APPS = [
     'books',
     'papers',
     'ai_assistant',
-
     'theme',
 ]
 
@@ -126,7 +123,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-
 DATABASES = {
     'default': dj_database_url.config(
         default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
@@ -142,25 +138,26 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = 'static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles_build' / 'static'
-WHITENOISE_MANIFEST_STRICT = False
-
 TAILWIND_APP_NAME = 'theme'
-
 INTERNAL_IPS = ["127.0.0.1"]
-
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
+LOGIN_URL = '/login/'
+
 # ==========================================
-# MEDIA & CLOUDINARY CONFIGURATION
+# STATIC, MEDIA & CLOUDINARY CONFIGURATION
 # ==========================================
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+WHITENOISE_MANIFEST_STRICT = False
+
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
@@ -172,66 +169,26 @@ if os.getenv('CLOUDINARY_API_KEY'):
 if os.getenv('CLOUDINARY_API_SECRET'):
     CLOUDINARY_STORAGE['API_SECRET'] = os.getenv('CLOUDINARY_API_SECRET')
 
-# Environment-aware storage configuration logic
+# Environment-aware storage configuration logic (Django 4.2+ standard)
 IS_PYTHONANYWHERE = 'pythonanywhere' in os.environ.get('HOME', '')
 
 if IS_PYTHONANYWHERE:
-    # Use standard storage settings on PythonAnywhere to bypass WhiteNoise processing crashes
-    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
-    if USE_CLOUDINARY:
-        DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-        STORAGES = {
-            'default': {
-                'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage',
-            },
-            'staticfiles': {
-                'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
-            },
-        }
-    else:
-        DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
-        STORAGES = {
-            'default': {
-                'BACKEND': 'django.core.files.storage.FileSystemStorage',
-                'OPTIONS': {
-                    'location': MEDIA_ROOT,
-                },
-            },
-            'staticfiles': {
-                'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
-            },
-        }
+    STORAGES = {
+        'default': {
+            'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage' if USE_CLOUDINARY else 'django.core.files.storage.FileSystemStorage',
+        },
+        'staticfiles': {
+            # Bypass WhiteNoise processing crashes on PA
+            'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+        },
+    }
 else:
     # Standard optimized configuration block for Vercel, Render, and Local environments
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
-    if USE_CLOUDINARY:
-        DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-        STORAGES = {
-            'default': {
-                'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage',
-            },
-            'staticfiles': {
-                'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
-            },
-        }
-    else:
-        DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
-        STORAGES = {
-            'default': {
-                'BACKEND': 'django.core.files.storage.FileSystemStorage',
-                'OPTIONS': {
-                    'location': MEDIA_ROOT,
-                },
-            },
-            'staticfiles': {
-                'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
-            },
-        }
-
-LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/'
-LOGIN_URL = '/login/'
-
-
-STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+    STORAGES = {
+        'default': {
+            'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage' if USE_CLOUDINARY else 'django.core.files.storage.FileSystemStorage',
+        },
+        'staticfiles': {
+            'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
+        },
+    }
