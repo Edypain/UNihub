@@ -75,6 +75,7 @@ if render_host:
 
 # Application definition
 INSTALLED_APPS = [
+    'django.contrib.staticfiles',
     'cloudinary_storage', 
     'cloudinary',
     'django.contrib.admin',
@@ -82,7 +83,6 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles',
 
     'tailwind',
     'rest_framework',
@@ -100,7 +100,7 @@ MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsViewMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
