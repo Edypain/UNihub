@@ -176,35 +176,41 @@ if os.getenv('CLOUDINARY_API_KEY'):
 if os.getenv('CLOUDINARY_API_SECRET'):
     CLOUDINARY_STORAGE['API_SECRET'] = os.getenv('CLOUDINARY_API_SECRET')
 
+# ==========================================
+# SUPABASE STORAGE CONFIGURATION (S3 API)
+# ==========================================
+AWS_ACCESS_KEY_ID = os.getenv('SUPABASE_AWS_ACCESS_KEY_ID') or os.getenv('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.getenv('SUPABASE_AWS_SECRET_ACCESS_KEY') or os.getenv('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = os.getenv('SUPABASE_STORAGE_BUCKET_NAME') or os.getenv('AWS_STORAGE_BUCKET_NAME')
+AWS_S3_ENDPOINT_URL = os.getenv('SUPABASE_S3_ENDPOINT_URL') or os.getenv('AWS_S3_ENDPOINT_URL')
+AWS_S3_REGION_NAME = os.getenv('AWS_S3_REGION_NAME', 'us-east-1')
+AWS_S3_SIGNATURE_VERSION = os.getenv('AWS_S3_SIGNATURE_VERSION', 's3v4')
+AWS_S3_FILE_OVERWRITE = False
+AWS_DEFAULT_ACL = None
+
+# Generate public URLs without query string parameters by default (unless requested)
+AWS_QUERYSTRING_AUTH = os.getenv('AWS_QUERYSTRING_AUTH', 'False') == 'True'
+
+USE_SUPABASE_STORAGE = all([AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_STORAGE_BUCKET_NAME, AWS_S3_ENDPOINT_URL])
+
 # Environment-aware storage configuration logic
 IS_PYTHONANYWHERE = 'pythonanywhere' in os.environ.get('HOME', '')
 
-if IS_PYTHONANYWHERE:
-    # Legacy variables required by django-cloudinary-storage internals
+if USE_SUPABASE_STORAGE:
+    DEFAULT_FILE_STORAGE = 'storages.backends.s3.S3Storage'
+    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage' if IS_PYTHONANYWHERE else 'whitenoise.storage.CompressedStaticFilesStorage'
+elif IS_PYTHONANYWHERE:
     STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage' if USE_CLOUDINARY else 'django.core.files.storage.FileSystemStorage'
-    
-    # Modern Django 4.2+ configuration mapping
-    STORAGES = {
-        'default': {
-            'BACKEND': DEFAULT_FILE_STORAGE,
-        },
-        'staticfiles': {
-            'BACKEND': STATICFILES_STORAGE,
-        },
-    }
 else:
-    # Standard optimized block for Vercel, Render, and Local environments
-    # Legacy variables required by django-cloudinary-storage internals
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage' if USE_CLOUDINARY else 'django.core.files.storage.FileSystemStorage'
-    
-    # Modern Django 4.2+ configuration mapping
-    STORAGES = {
-        'default': {
-            'BACKEND': DEFAULT_FILE_STORAGE,
-        },
-        'staticfiles': {
-            'BACKEND': STATICFILES_STORAGE,
-        },
-    }
+
+STORAGES = {
+    'default': {
+        'BACKEND': DEFAULT_FILE_STORAGE,
+    },
+    'staticfiles': {
+        'BACKEND': STATICFILES_STORAGE,
+    },
+}

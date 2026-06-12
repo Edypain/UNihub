@@ -22,6 +22,19 @@ RUN pip install --no-cache-dir --upgrade pip \
 # Copy the remaining application source files
 COPY . /app/
 
+# Set a fallback SECRET_KEY for build commands
+ENV SECRET_KEY=django-insecure-build-fallback
+
+# Build tailwind styles and collect static files
+RUN python manage.py tailwind build \
+    && python manage.py collectstatic --no-input
+
+# Make the start script executable
+RUN chmod +x /app/start.sh
+
 # Expose the application port
 EXPOSE 8000
+
+# Start the application using the start script
+CMD ["/app/start.sh"]
 
