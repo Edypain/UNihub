@@ -188,7 +188,7 @@ AWS_S3_SIGNATURE_VERSION = os.getenv('AWS_S3_SIGNATURE_VERSION', 's3v4')
 AWS_S3_FILE_OVERWRITE = False
 AWS_DEFAULT_ACL = None
 
-# Generate public URLs without query string parameters by default (unless requested)
+# Force clean, signature-free public links for public bucket architecture
 AWS_QUERYSTRING_AUTH = os.getenv('AWS_QUERYSTRING_AUTH', 'False') == 'True'
 
 USE_SUPABASE_STORAGE = all([AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_STORAGE_BUCKET_NAME, AWS_S3_ENDPOINT_URL])
@@ -197,20 +197,44 @@ USE_SUPABASE_STORAGE = all([AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_STORAG
 IS_PYTHONANYWHERE = 'pythonanywhere' in os.environ.get('HOME', '')
 
 if USE_SUPABASE_STORAGE:
+    # Set legacy variables required for full library backward-compatibility
     DEFAULT_FILE_STORAGE = 'storages.backends.s3.S3Storage'
     STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage' if IS_PYTHONANYWHERE else 'whitenoise.storage.CompressedStaticFilesStorage'
+    
+    # Modern Django 4.2+ mapping
+    STORAGES = {
+        'default': {
+            'BACKEND': DEFAULT_FILE_STORAGE,
+        },
+        'staticfiles': {
+            'BACKEND': STATICFILES_STORAGE,
+        },
+    }
 elif IS_PYTHONANYWHERE:
+    # Set legacy variables required for full library backward-compatibility
     STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage' if USE_CLOUDINARY else 'django.core.files.storage.FileSystemStorage'
+    
+    # Modern Django 4.2+ mapping
+    STORAGES = {
+        'default': {
+            'BACKEND': DEFAULT_FILE_STORAGE,
+        },
+        'staticfiles': {
+            'BACKEND': STATICFILES_STORAGE,
+        },
+    }
 else:
+    # Set legacy variables required for full library backward-compatibility
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage' if USE_CLOUDINARY else 'django.core.files.storage.FileSystemStorage'
-
-STORAGES = {
-    'default': {
-        'BACKEND': DEFAULT_FILE_STORAGE,
-    },
-    'staticfiles': {
-        'BACKEND': STATICFILES_STORAGE,
-    },
-}
+    
+    # Modern Django 4.2+ mapping
+    STORAGES = {
+        'default': {
+            'BACKEND': DEFAULT_FILE_STORAGE,
+        },
+        'staticfiles': {
+            'BACKEND': STATICFILES_STORAGE,
+        },
+    }
