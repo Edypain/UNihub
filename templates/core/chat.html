@@ -1,9 +1,10 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="max-w-6xl mx-auto glass-card rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row h-[78vh]">
+<div class="max-w-6xl mx-auto glass-card rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row h-[78vh] relative">
+    
     <!-- Channels Sidebar -->
-    <div class="w-full md:w-80 border-r border-slate-200 dark:border-darkBorder flex flex-col bg-white/40 dark:bg-darkCard/40">
+    <div id="chat-sidebar" class="w-full md:w-80 border-r border-slate-200 dark:border-darkBorder flex flex-col bg-white/40 dark:bg-darkCard/40 h-full transition-all duration-300">
         <div class="p-6 border-b border-slate-200 dark:border-darkBorder">
             <h2 class="text-xl font-bold font-display text-slate-800 dark:text-slate-100 flex items-center space-x-2">
                 <span>💬</span><span>Community Chat</span>
@@ -41,12 +42,18 @@
     </div>
 
     <!-- Chat Area -->
-    <div class="flex-1 flex flex-col bg-slate-50/30 dark:bg-darkBg/10 h-full relative">
+    <div id="chat-area" class="hidden md:flex flex-1 flex-col bg-slate-50/30 dark:bg-darkBg/10 h-full relative transition-all duration-300">
         <!-- Chat Header -->
         <div class="px-6 py-4 border-b border-slate-200 dark:border-darkBorder bg-white/35 dark:bg-darkCard/35 backdrop-blur-md flex items-center justify-between">
-            <div>
-                <h3 class="font-bold text-slate-800 dark:text-slate-100 font-display" id="active-channel-title">General Lobby</h3>
-                <p class="text-xs text-slate-400" id="channel-desc">Ask questions, share advice, and help peers</p>
+            <div class="flex items-center space-x-3">
+                <!-- Back Button (Mobile Only) -->
+                <button onclick="backToSidebar()" class="md:hidden p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-xl transition-all text-slate-600 dark:text-slate-300">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                </button>
+                <div>
+                    <h3 class="font-bold text-slate-800 dark:text-slate-100 font-display" id="active-channel-title">General Lobby</h3>
+                    <p class="text-xs text-slate-400" id="channel-desc">Ask questions, share advice, and help peers</p>
+                </div>
             </div>
             
             <!-- Quick share float widget indicator -->
@@ -84,7 +91,7 @@
         </div>
 
         <!-- Chat Input Bar -->
-        <div class="p-6 border-t border-slate-200 dark:border-darkBorder bg-white/50 dark:bg-darkCard/50 backdrop-blur-md">
+        <div class="p-4 sm:p-6 border-t border-slate-200 dark:border-darkBorder bg-white/50 dark:bg-darkCard/50 backdrop-blur-md">
             <form id="chat-form" onsubmit="sendMessage(event)" class="space-y-4">
                 {% csrf_token %}
                 <div class="flex flex-col sm:flex-row gap-3">
@@ -119,7 +126,7 @@
 </div>
 
 <!-- Material Sharing Modal Overlay -->
-<div id="share-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/60 backdrop-blur-sm">
+<div id="share-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
     <div class="bg-white dark:bg-darkCard border border-slate-200 dark:border-darkBorder w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl p-6 relative animate-in fade-in duration-300">
         <h3 class="text-lg font-bold font-display text-slate-800 dark:text-slate-100 flex items-center space-x-2">
             <span>📎</span><span>Share Study Resource</span>
@@ -148,6 +155,7 @@
     let lastMessageId = 0;
     let pollInterval = null;
     let selectedAttachment = null;
+    let activePolledView = 'channels'; // 'channels' or 'chat' on mobile
 
     function switchChannel(deptId, btnElement) {
         currentDeptId = deptId;
@@ -176,10 +184,32 @@
             </div>
         `;
         
+        // Toggle mobile views
+        if (window.innerWidth < 768) {
+            document.getElementById('chat-sidebar').classList.add('hidden');
+            document.getElementById('chat-area').classList.remove('hidden');
+            document.getElementById('chat-area').classList.add('flex');
+            activePolledView = 'chat';
+        }
+        
         fetchMessages(true);
     }
 
+    function backToSidebar() {
+        if (window.innerWidth < 768) {
+            document.getElementById('chat-area').classList.add('hidden');
+            document.getElementById('chat-area').classList.remove('flex');
+            document.getElementById('chat-sidebar').classList.remove('hidden');
+            activePolledView = 'channels';
+        }
+    }
+
     async function fetchMessages(clearScreen = false) {
+        // Skip calling backend fetch if we are looking at channels list on mobile
+        if (window.innerWidth < 768 && activePolledView === 'channels' && !clearScreen) {
+            return;
+        }
+
         try {
             const url = `/chat/messages/?dept_id=${currentDeptId || ''}&last_id=${lastMessageId}`;
             const response = await fetch(url);
@@ -246,7 +276,7 @@
         let sharedCard = '';
         if (msg.shared_item) {
             sharedCard = `
-                <div class="mt-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex items-start space-x-3 w-72 shrink-0">
+                <div class="mt-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex items-start space-x-3 max-w-[260px] sm:w-72 shrink-0">
                     <span class="text-2xl">${msg.shared_item.icon}</span>
                     <div class="flex-1 min-w-0">
                         <h4 class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">${msg.shared_item.title}</h4>
@@ -265,7 +295,7 @@
             
         wrapper.innerHTML = `
             ${headerHTML}
-            <div class="max-w-[75%]">
+            <div class="max-w-[85%] sm:max-w-[75%]">
                 <div class="px-4 py-2.5 text-sm ${bubbleBg}">
                     <p class="whitespace-pre-wrap leading-relaxed">${escapeHTML(msg.message)}</p>
                     ${sharedCard}
@@ -387,10 +417,35 @@
         document.getElementById('attachment-preview').classList.add('hidden');
     }
 
-    // Initialize Long Polling
+    // Initialize View & Long Polling
     document.addEventListener('DOMContentLoaded', () => {
+        // Setup initial view state depending on resolution
+        if (window.innerWidth < 768) {
+            document.getElementById('chat-sidebar').classList.remove('hidden');
+            document.getElementById('chat-area').classList.add('hidden');
+            activePolledView = 'channels';
+        } else {
+            document.getElementById('chat-sidebar').classList.remove('hidden');
+            document.getElementById('chat-area').classList.remove('hidden');
+            activePolledView = 'chat';
+        }
+
         fetchMessages(true);
         pollInterval = setInterval(() => fetchMessages(false), 3000);
+    });
+
+    window.addEventListener('resize', () => {
+        if (window.innerWidth >= 768) {
+            document.getElementById('chat-sidebar').classList.remove('hidden');
+            document.getElementById('chat-area').classList.remove('hidden');
+            document.getElementById('chat-area').classList.add('flex');
+            activePolledView = 'chat';
+        } else if (activePolledView === 'channels') {
+            document.getElementById('chat-area').classList.add('hidden');
+            document.getElementById('chat-area').classList.remove('flex');
+        } else {
+            document.getElementById('chat-sidebar').classList.add('hidden');
+        }
     });
 
     window.addEventListener('beforeunload', () => {
