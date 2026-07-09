@@ -51,6 +51,18 @@ class ChatMessage(models.Model):
     anonymous_name = models.CharField(max_length=100, blank=True)
     message = models.TextField(blank=True)
     
+    VIBE_CHOICES = [
+        ('none', 'No Vibe'),
+        ('cramming', '🔥 Cramming'),
+        ('confused', '😵‍💫 Confused'),
+        ('acing', '🚀 Acing it'),
+        ('chill', '☕ Chill'),
+        ('tired', '😴 Tired'),
+        ('curious', '🤔 Curious'),
+    ]
+    vibe = models.CharField(max_length=20, choices=VIBE_CHOICES, default='none')
+    upvotes_count = models.IntegerField(default=0)
+    
     # Optional channel grouping by department
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True, related_name='chat_messages')
     

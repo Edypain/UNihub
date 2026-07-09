@@ -311,5 +311,74 @@
             </div>
         </div>
     </footer>
+
+    <!-- Global Chat Toast Notification -->
+    {% if user.is_authenticated and request.resolver_match.url_name != 'chat_lobby' %}
+    <div id="chat-toast" class="fixed bottom-4 right-4 z-[100] transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none">
+        <a href="{% url 'chat_lobby' %}" class="pointer-events-auto block bg-white/90 dark:bg-darkCard/90 backdrop-blur-md border border-slate-200 dark:border-darkBorder shadow-2xl rounded-2xl p-4 flex items-start space-x-3 w-80 cursor-pointer hover:shadow-sky-500/20 group hover:-translate-y-1 transition-transform">
+            <div class="h-10 w-10 rounded-full bg-sky-500/20 flex items-center justify-center shrink-0">
+                <span class="text-xl animate-bounce">💬</span>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="flex justify-between items-start">
+                    <p class="text-[10px] font-bold text-sky-500 uppercase tracking-wider" id="toast-channel">General Lobby</p>
+                    <button onclick="event.preventDefault(); document.getElementById('chat-toast').classList.remove('translate-y-0', 'opacity-100'); document.getElementById('chat-toast').classList.add('translate-y-24', 'opacity-0');" class="text-slate-400 hover:text-rose-500 transition-colors p-1 -mt-1 -mr-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+                <h4 class="text-sm font-bold text-slate-800 dark:text-slate-100 mt-0.5 truncate" id="toast-sender">Anonymous</h4>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 truncate" id="toast-snippet">New message...</p>
+            </div>
+        </a>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            let lastMessageId = localStorage.getItem('unihub_last_msg_id') || 0;
+            
+            setInterval(async () => {
+                try {
+                    const response = await fetch(`/chat/unread/?last_id=${lastMessageId}`);
+                    const data = await response.json();
+                    
+                    if (data.has_new && data.last_id > lastMessageId) {
+                        lastMessageId = data.last_id;
+                        localStorage.setItem('unihub_last_msg_id', lastMessageId);
+                        
+                        document.getElementById('toast-channel').textContent = data.channel_name;
+                        
+                        let senderText = data.sender_name;
+                        if (data.vibe && data.vibe !== 'none') {
+                            const vibeMap = {
+                                'cramming': '🔥 Cramming',
+                                'confused': '😵‍💫 Confused',
+                                'acing': '🚀 Acing it',
+                                'chill': '☕ Chill',
+                                'tired': '😴 Tired',
+                                'curious': '🤔 Curious'
+                            };
+                            senderText = `[${vibeMap[data.vibe]}] ${senderText}`;
+                        }
+                        
+                        document.getElementById('toast-sender').textContent = senderText;
+                        document.getElementById('toast-snippet').textContent = data.message_snippet;
+                        
+                        const toast = document.getElementById('chat-toast');
+                        toast.classList.remove('translate-y-24', 'opacity-0');
+                        toast.classList.add('translate-y-0', 'opacity-100');
+                        
+                        // Auto hide after 6 seconds
+                        setTimeout(() => {
+                            toast.classList.remove('translate-y-0', 'opacity-100');
+                            toast.classList.add('translate-y-24', 'opacity-0');
+                        }, 6000);
+                    }
+                } catch (err) {
+                    // Fail silently
+                }
+            }, 8000); // Poll every 8s
+        });
+    </script>
+    {% endif %}
 </body>
 </html>

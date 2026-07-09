@@ -29,6 +29,8 @@ urlpatterns = [
     path('chat/messages/', core_views.get_chat_messages, name='get_chat_messages'),
     path('chat/send/', core_views.send_chat_message, name='send_chat_message'),
     path('chat/search/', core_views.search_shareable_materials, name='search_shareable_materials'),
+    path('chat/upvote/<int:message_id>/', core_views.upvote_message, name='upvote_message'),
+    path('chat/unread/', core_views.check_unread_messages, name='check_unread_messages'),
     
     # Fast Viewer
     path('viewer/<str:type>/<int:id>/', core_views.view_material, name='view_material'),

@@ -15,9 +15,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Load environment variables
 load_dotenv(BASE_DIR / '.env')
 
-# =========================================================
-# VERCEL BUILD & FORMATTING SHIELD
-# =========================================================
+
 _cloud_url = os.environ.get('CLOUDINARY_URL', '')
 
 
@@ -28,7 +26,7 @@ def get_env_value(name, default=None, required=False):
     return value
 
 
-# Quick-start development settings
+#  development settings
 if os.getenv('VERCEL') or os.getenv('VERCEL_ENV'):
     SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-vercel-build-fallback')
 else:
@@ -36,7 +34,7 @@ else:
 
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-# Use Cloudinary if CLOUDINARY_URL is configured AND we are in production/Vercel (or explicitly enabled)
+#  Cloudinary  (or explicitly enabled)
 USE_CLOUDINARY = os.getenv('USE_CLOUDINARY', 'False') == 'True'
 if not USE_CLOUDINARY:
     _is_vercel = os.getenv('VERCEL') is not None or os.getenv('VERCEL_ENV') is not None

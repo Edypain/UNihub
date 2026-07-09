@@ -107,16 +107,27 @@
                     </div>
                     
                     <div class="flex items-center justify-between sm:justify-end gap-3">
+                        <!-- Vibe Selector -->
+                        <select id="vibe-select" class="text-[10px] sm:text-xs rounded-xl border border-slate-200 dark:border-darkBorder bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-1 focus:ring-sky-500 cursor-pointer px-2 py-1.5 font-bold">
+                            <option value="none">No Vibe</option>
+                            <option value="cramming">🔥 Cramming</option>
+                            <option value="confused">😵‍💫 Confused</option>
+                            <option value="acing">🚀 Acing it</option>
+                            <option value="chill">☕ Chill</option>
+                            <option value="tired">😴 Tired</option>
+                            <option value="curious">🤔 Curious</option>
+                        </select>
+                        
                         <!-- Anonymous Toggle -->
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" id="anonymous-toggle" checked class="sr-only peer">
-                            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-sky-500"></div>
-                            <span class="ml-2 text-xs font-bold text-slate-600 dark:text-slate-300 select-none">Send Anonymously</span>
+                            <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-sky-500"></div>
+                            <span class="ml-1.5 text-[10px] sm:text-xs font-bold text-slate-600 dark:text-slate-300 select-none">Anon</span>
                         </label>
 
-                        <button type="submit" class="px-6 py-3 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-2xl text-sm transition-all shadow-md flex items-center space-x-2">
-                            <span>Send</span>
-                            <svg class="w-3.5 h-3.5 transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                        <button type="submit" class="px-5 py-2.5 sm:px-6 sm:py-3 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-2xl text-sm transition-all shadow-md hover:shadow-sky-500/30 flex items-center space-x-2 transform hover:-translate-y-0.5">
+                            <span class="hidden sm:inline">Send</span>
+                            <svg class="w-4 h-4 transform rotate-90 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
                         </button>
                     </div>
                 </div>
@@ -226,6 +237,7 @@
                 data.messages.forEach(msg => {
                     if (msg.id > lastMessageId) {
                         lastMessageId = msg.id;
+                        localStorage.setItem('unihub_last_msg_id', lastMessageId);
                     }
                     appendMessageUI(msg);
                 });
@@ -259,24 +271,41 @@
         const wrapper = document.createElement('div');
         wrapper.className = `flex flex-col ${msg.is_self ? 'items-end' : 'items-start'} space-y-1 w-full animate-in fade-in duration-200`;
         
+        let vibeLabel = '';
+        if (msg.vibe && msg.vibe !== 'none') {
+            const vibeMap = {
+                'cramming': '🔥 Cramming',
+                'confused': '😵‍💫 Confused',
+                'acing': '🚀 Acing it',
+                'chill': '☕ Chill',
+                'tired': '😴 Tired',
+                'curious': '🤔 Curious'
+            };
+            vibeLabel = `<span class="text-[9px] bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-400 px-1.5 py-0.5 rounded-full font-bold ml-1">${vibeMap[msg.vibe]}</span>`;
+        }
+
         let headerHTML = '';
         if (!msg.is_self) {
             headerHTML = `
-                <div class="flex items-center space-x-2">
+                <div class="flex items-center flex-wrap gap-1">
                     <span class="text-[10px] font-bold uppercase bg-gradient-to-r ${msg.sender_color} bg-clip-text text-transparent">${msg.sender_name}</span>
-                    ${msg.is_anonymous ? '<span class="text-[9px] bg-slate-200/60 dark:bg-slate-800 text-slate-400 px-1 py-0.2 rounded font-bold">ANON</span>' : ''}
+                    ${msg.is_anonymous ? '<span class="text-[9px] bg-slate-200/60 dark:bg-slate-800 text-slate-400 px-1 py-0.5 rounded font-bold">ANON</span>' : ''}
+                    ${vibeLabel}
                 </div>
             `;
         } else {
             headerHTML = `
-                <span class="text-[10px] font-bold text-slate-400">${msg.is_anonymous ? 'You (Anonymous)' : 'You'}</span>
+                <div class="flex items-center flex-wrap gap-1 justify-end">
+                    ${vibeLabel}
+                    <span class="text-[10px] font-bold text-slate-400">${msg.is_anonymous ? 'You (Anonymous)' : 'You'}</span>
+                </div>
             `;
         }
         
         let sharedCard = '';
         if (msg.shared_item) {
             sharedCard = `
-                <div class="mt-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex items-start space-x-3 max-w-[260px] sm:w-72 shrink-0">
+                <div class="mt-2 bg-slate-50/80 dark:bg-slate-900/80 border border-slate-200/50 dark:border-slate-800/50 rounded-xl p-3 flex items-start space-x-3 max-w-[260px] sm:w-72 shrink-0 group-hover:border-sky-500/50 transition-colors">
                     <span class="text-2xl">${msg.shared_item.icon}</span>
                     <div class="flex-1 min-w-0">
                         <h4 class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">${msg.shared_item.title}</h4>
@@ -289,18 +318,42 @@
             `;
         }
         
+        let upvoteBtn = '';
+        if (!msg.is_self) {
+            upvoteBtn = `
+                <button onclick="upvoteMessage(${msg.id}, this)" class="text-[10px] flex items-center space-x-1 text-slate-500 hover:text-sky-500 bg-white dark:bg-darkCard border border-slate-200 dark:border-darkBorder rounded-full px-2 py-0.5 shadow-sm transition-all mt-1 hover:scale-105 active:scale-95 group">
+                    <span class="group-hover:animate-bounce">🧠</span>
+                    <span class="font-bold upvote-count">${msg.upvotes_count || 0}</span>
+                </button>
+            `;
+        } else if (msg.upvotes_count > 0) {
+             upvoteBtn = `
+                <div class="text-[10px] flex items-center space-x-1 text-slate-400 bg-white/50 dark:bg-darkCard/50 border border-slate-200 dark:border-darkBorder rounded-full px-2 py-0.5 shadow-sm mt-1 self-end">
+                    <span>🧠</span>
+                    <span class="font-bold">${msg.upvotes_count}</span>
+                </div>
+            `;
+        }
+        
+        const isGlowing = msg.upvotes_count >= 3;
+        const glowClass = isGlowing ? 'ring-2 ring-amber-400/50 shadow-[0_0_15px_rgba(251,191,36,0.3)]' : '';
+        
         const bubbleBg = msg.is_self 
-            ? 'bg-sky-500 text-white rounded-br-none rounded-2xl shadow-sm' 
-            : 'bg-white dark:bg-darkCard border border-slate-200 dark:border-darkBorder text-slate-800 dark:text-slate-100 rounded-bl-none rounded-2xl shadow-sm';
+            ? 'bg-sky-500 text-white rounded-br-none rounded-2xl shadow-sm ' + glowClass
+            : 'bg-white dark:bg-darkCard border border-slate-200 dark:border-darkBorder text-slate-800 dark:text-slate-100 rounded-bl-none rounded-2xl shadow-sm ' + glowClass;
             
         wrapper.innerHTML = `
             ${headerHTML}
-            <div class="max-w-[85%] sm:max-w-[75%]">
-                <div class="px-4 py-2.5 text-sm ${bubbleBg}">
+            <div class="max-w-[85%] sm:max-w-[75%] flex flex-col ${msg.is_self ? 'items-end' : 'items-start'}">
+                <div class="px-4 py-2.5 text-sm ${bubbleBg} transition-all">
                     <p class="whitespace-pre-wrap leading-relaxed">${escapeHTML(msg.message)}</p>
                     ${sharedCard}
                 </div>
-                <div class="text-[9px] text-slate-400 mt-0.5 text-right w-full px-1">${msg.created_at}</div>
+                <div class="flex items-center space-x-2 mt-0.5 w-full ${msg.is_self ? 'justify-end' : 'justify-start'}">
+                    ${!msg.is_self ? upvoteBtn : ''}
+                    <div class="text-[9px] text-slate-400 px-1">${msg.created_at}</div>
+                    ${msg.is_self ? upvoteBtn : ''}
+                </div>
             </div>
         `;
         
@@ -318,12 +371,14 @@
         const input = document.getElementById('message-input');
         const text = input.value.trim();
         const isAnon = document.getElementById('anonymous-toggle').checked;
+        const vibe = document.getElementById('vibe-select').value;
         
         if (!text && !selectedAttachment) return;
         
         const formData = new FormData();
         formData.append('message', text);
         formData.append('is_anonymous', isAnon);
+        formData.append('vibe', vibe);
         if (currentDeptId) {
             formData.append('dept_id', currentDeptId);
         }
@@ -345,6 +400,34 @@
             fetchMessages();
         } catch (err) {
             console.error('Error sending message:', err);
+        }
+    }
+
+    async function upvoteMessage(msgId, btnElement) {
+        try {
+            const formData = new FormData();
+            formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+            
+            const response = await fetch(`/chat/upvote/${msgId}/`, {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            if (data.status === 'ok') {
+                const countSpan = btnElement.querySelector('.upvote-count');
+                countSpan.textContent = data.upvotes;
+                btnElement.classList.add('text-sky-500', 'border-sky-500');
+                
+                // Add glow if upvotes reach threshold visually
+                if (data.upvotes >= 3) {
+                    const bubble = btnElement.closest('.max-w-\\[85\\%\\]').querySelector('.rounded-2xl');
+                    if (bubble) {
+                        bubble.classList.add('ring-2', 'ring-amber-400/50', 'shadow-[0_0_15px_rgba(251,191,36,0.3)]');
+                    }
+                }
+            }
+        } catch (err) {
+            console.error('Error upvoting:', err);
         }
     }
 

@@ -272,7 +272,9 @@ def get_chat_messages(request):
             'sender_color': sender_anon_color if msg.is_anonymous else "from-slate-600 to-slate-800",
             'is_self': msg.sender == request.user,
             'created_at': msg.created_at.strftime('%H:%M'),
-            'shared_item': shared_item
+            'shared_item': shared_item,
+            'vibe': msg.vibe,
+            'upvotes_count': msg.upvotes_count
         })
         
     return JsonResponse({'messages': data})
@@ -284,6 +286,7 @@ def send_chat_message(request):
         message_text = request.POST.get('message', '').strip()
         is_anon = request.POST.get('is_anonymous') == 'true'
         dept_id = request.POST.get('dept_id')
+        vibe = request.POST.get('vibe', 'none')
         
         shared_type = request.POST.get('shared_type')
         shared_id = request.POST.get('shared_id')
@@ -305,7 +308,8 @@ def send_chat_message(request):
             is_anonymous=is_anon,
             anonymous_name=anon_name if is_anon else "",
             message=message_text,
-            department=dept
+            department=dept,
+            vibe=vibe
         )
         
         if shared_type and shared_id:
@@ -381,4 +385,42 @@ def view_material(request, type, id):
         'material_type': type.capitalize(),
         'material': material
     }
-    return render(request, 'core/viewer.html', context)
+    return render(request, 'core/viewer.html', context)
+
+@login_required
+def upvote_message(request, message_id):
+    if request.method == 'POST':
+        msg = get_object_or_404(ChatMessage, id=message_id)
+        msg.upvotes_count += 1
+        msg.save()
+        return JsonResponse({'status': 'ok', 'upvotes': msg.upvotes_count})
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+@login_required
+def check_unread_messages(request):
+    last_id = int(request.GET.get('last_id', 0))
+    
+    # Base query for messages greater than last_id and NOT sent by the current user
+    messages_query = ChatMessage.objects.filter(id__gt=last_id).exclude(sender=request.user)
+    
+    dept_id = None
+    if hasattr(request.user, 'student') and request.user.student.department:
+        dept_id = request.user.student.department.id
+        
+    messages_query = messages_query.filter(Q(department__isnull=True) | Q(department_id=dept_id))
+        
+    latest_msg = messages_query.order_by('-created_at').first()
+    
+    if latest_msg:
+        sender_anon_name, _ = get_anonymous_details(latest_msg.sender)
+        channel_name = latest_msg.department.name if latest_msg.department else "General Lobby"
+        return JsonResponse({
+            'has_new': True,
+            'last_id': latest_msg.id,
+            'message_snippet': latest_msg.message[:50] + ('...' if len(latest_msg.message) > 50 else ''),
+            'sender_name': sender_anon_name if latest_msg.is_anonymous else latest_msg.sender.username,
+            'channel_name': channel_name,
+            'vibe': latest_msg.vibe
+        })
+        
+    return JsonResponse({'has_new': False})
