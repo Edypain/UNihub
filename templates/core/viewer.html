@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-6">
+    <!-- Header Actions -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white/40 dark:bg-darkCard/40 glass-card p-5 rounded-2xl shadow-sm">
+        <div class="flex items-center space-x-3">
+            <a href="javascript:history.back()" class="p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-xl transition-all text-slate-600 dark:text-slate-300">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            </a>
+            <div>
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-sky-100 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800">{{ material_type }}</span>
+                <h1 class="text-xl font-bold text-slate-800 dark:text-slate-100 mt-1 line-clamp-1 font-display">{{ title }}</h1>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 w-full sm:w-auto shrink-0">
+            <!-- Share Link Trigger -->
+            <button onclick="shareLink('{{ request.build_absolute_uri }}', '{{ title|escapejs }}')"
+                class="flex-1 sm:flex-none justify-center px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-sm transition-all flex items-center space-x-2">
+                <span>🔗</span>
+                <span>Share</span>
+            </button>
+            
+            <a href="{{ file_url }}" download
+                class="flex-1 sm:flex-none justify-center px-4 py-2.5 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl text-sm transition-all shadow-md flex items-center space-x-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                <span>Download</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Viewer Body -->
+    <div class="grid lg:grid-cols-4 gap-6">
+        <!-- Sidebar Metadata -->
+        <div class="lg:col-span-1 space-y-6">
+            <div class="glass-card bg-white/40 dark:bg-darkCard/40 p-6 rounded-2xl shadow-sm space-y-4">
+                <h3 class="font-bold text-sm text-slate-800 dark:text-slate-200 border-b border-slate-100 dark:border-slate-800 pb-2">Material Details</h3>
+                
+                <div class="space-y-3 text-xs">
+                    <div>
+                        <div class="text-slate-400">Department</div>
+                        <div class="font-semibold text-slate-700 dark:text-slate-200 mt-0.5">{{ department_name }}</div>
+                    </div>
+                    {% if course_code %}
+                    <div>
+                        <div class="text-slate-400">Course Code</div>
+                        <div class="font-semibold text-slate-700 dark:text-slate-200 mt-0.5">{{ course_code }}</div>
+                    </div>
+                    {% endif %}
+                    {% if material.author %}
+                    <div>
+                        <div class="text-slate-400">Author</div>
+                        <div class="font-semibold text-slate-700 dark:text-slate-200 mt-0.5">{{ material.author }}</div>
+                    </div>
+                    {% endif %}
+                    {% if material.year %}
+                    <div>
+                        <div class="text-slate-400">Academic Year</div>
+                        <div class="font-semibold text-slate-700 dark:text-slate-200 mt-0.5">{{ material.year }}</div>
+                    </div>
+                    {% endif %}
+                    {% if material.semester %}
+                    <div>
+                        <div class="text-slate-400">Semester</div>
+                        <div class="font-semibold text-slate-700 dark:text-slate-200 mt-0.5">{{ material.semester }}</div>
+                    </div>
+                    {% endif %}
+                    {% if material.uploaded_by %}
+                    <div>
+                        <div class="text-slate-400">Contributor</div>
+                        <div class="font-semibold text-slate-700 dark:text-slate-200 mt-0.5">{{ material.uploaded_by.username }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Quick Tips Panel -->
+            <div class="bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 p-5 rounded-2xl">
+                <h4 class="font-bold text-xs text-indigo-700 dark:text-indigo-400 flex items-center space-x-1.5">
+                    <span>✨</span><span>Study Tip</span>
+                </h4>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
+                    Need quick summaries or equations extracted? Head to the **AI Assistant** tab and paste concepts to get customized tutor worksheets!
+                </p>
+            </div>
+        </div>
+
+        <!-- Inline PDF embed container -->
+        <div class="lg:col-span-3">
+            <div class="glass-card bg-slate-900 border border-slate-800 w-full h-[75vh] rounded-3xl overflow-hidden shadow-2xl relative">
+                <!-- Fallback info header -->
+                <div class="absolute top-0 inset-x-0 bg-slate-950/80 px-6 py-3 text-xs text-slate-400 border-b border-slate-800 flex justify-between items-center z-10 backdrop-blur-md">
+                    <span>Previewing Document</span>
+                    <span class="text-slate-500">Press Download button if preview doesn't render</span>
+                </div>
+                
+                <!-- PDF Renderer iframe/embed -->
+                <iframe src="https://docs.google.com/gview?url={{ request.scheme }}://{{ request.get_host }}{{ file_url }}&embedded=true" 
+                    class="w-full h-full pt-10" 
+                    frameborder="0">
+                </iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Global Share Copy Banner / Popover -->
+<div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 pointer-events-none transition-all duration-300 ease-out bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center space-x-2 text-sm">
+    <span class="text-emerald-400">✓</span>
+    <span id="toast-message">Link copied to clipboard!</span>
+</div>
+
+<script>
+    function shareLink(url, title) {
+        if (navigator.share) {
+            navigator.share({
+                title: title,
+                url: url
+            }).catch(console.error);
+        } else {
+            navigator.clipboard.writeText(url).then(() => {
+                showToast("URL copied to clipboard!");
+            });
+        }
+    }
+
+    function showToast(msg) {
+        const toast = document.getElementById('toast');
+        document.getElementById('toast-message').textContent = msg;
+        toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+        
+        setTimeout(() => {
+            toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+        }, 3000);
+    }
+</script>
+{% endblock %}

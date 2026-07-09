@@ -15,7 +15,7 @@ def paper_list(request):
 
     if request.user.is_authenticated:
         student, created = Student.objects.get_or_create(user=request.user)
-        papers = PastPaper.objects.all().order_by('-year')
+        papers = PastPaper.objects.all().select_related('department', 'uploaded_by').order_by('-year')
 
         query = request.GET.get('q', '').strip()
         dept_id = request.GET.get('dept', '').strip()
@@ -69,7 +69,7 @@ def upload_paper(request):
 @login_required
 def lecture_list(request):
     departments = Department.objects.all()
-    lectures = LectureSlide.objects.all().order_by('-uploaded_at')
+    lectures = LectureSlide.objects.all().select_related('department', 'uploaded_by').order_by('-uploaded_at')
 
     if request.user.is_authenticated:
         student, created = Student.objects.get_or_create(user=request.user)

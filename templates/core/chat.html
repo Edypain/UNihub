@@ -1,0 +1,400 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto glass-card rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row h-[78vh]">
+    <!-- Channels Sidebar -->
+    <div class="w-full md:w-80 border-r border-slate-200 dark:border-darkBorder flex flex-col bg-white/40 dark:bg-darkCard/40">
+        <div class="p-6 border-b border-slate-200 dark:border-darkBorder">
+            <h2 class="text-xl font-bold font-display text-slate-800 dark:text-slate-100 flex items-center space-x-2">
+                <span>💬</span><span>Community Chat</span>
+            </h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Chat anonymously or publicly</p>
+        </div>
+        
+        <!-- Identity Preview -->
+        <div class="p-4 mx-4 my-3 bg-gradient-to-r {{ anon_color }} rounded-2xl text-white shadow-sm flex items-center justify-between">
+            <div class="min-w-0">
+                <div class="text-[10px] uppercase font-bold tracking-wider opacity-75">Your Anonymous Alias</div>
+                <div class="font-bold text-sm truncate pr-2">{{ anon_name }}</div>
+            </div>
+            <div class="h-8 w-8 rounded-full bg-white/20 flex items-center justify-center font-bold font-display text-sm shrink-0">
+                👤
+            </div>
+        </div>
+
+        <div class="flex-grow overflow-y-auto p-4 space-y-1" id="channels-list">
+            <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-3 mb-2">Channels</div>
+            
+            <!-- General lobby channel -->
+            <button onclick="switchChannel(null, this)" class="w-full text-left px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center space-x-3 bg-sky-500 text-white shadow-md active-channel">
+                <span class="text-lg">🌐</span>
+                <span class="truncate">General Lobby</span>
+            </button>
+            
+            {% for dept in departments %}
+            <button onclick="switchChannel({{ dept.id }}, this)" class="w-full text-left px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center space-x-3 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-800 dark:hover:text-slate-200">
+                <span class="text-lg">🎓</span>
+                <span class="truncate">{{ dept.name }}</span>
+            </button>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Chat Area -->
+    <div class="flex-1 flex flex-col bg-slate-50/30 dark:bg-darkBg/10 h-full relative">
+        <!-- Chat Header -->
+        <div class="px-6 py-4 border-b border-slate-200 dark:border-darkBorder bg-white/35 dark:bg-darkCard/35 backdrop-blur-md flex items-center justify-between">
+            <div>
+                <h3 class="font-bold text-slate-800 dark:text-slate-100 font-display" id="active-channel-title">General Lobby</h3>
+                <p class="text-xs text-slate-400" id="channel-desc">Ask questions, share advice, and help peers</p>
+            </div>
+            
+            <!-- Quick share float widget indicator -->
+            <div class="hidden sm:block">
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                    <span class="w-2.5 h-2.5 bg-emerald-500 rounded-full mr-1.5 animate-pulse"></span>
+                    Online Lobby
+                </span>
+            </div>
+        </div>
+
+        <!-- Message List -->
+        <div class="flex-grow overflow-y-auto p-6 space-y-4 flex flex-col" id="message-container">
+            <!-- Messages populated dynamically -->
+            <div class="flex items-center justify-center h-full text-slate-400">
+                <div class="text-center">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500 mx-auto mb-2"></div>
+                    <p class="text-xs">Loading messages...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attachment Selector Preview Area -->
+        <div id="attachment-preview" class="hidden px-6 py-3 border-t border-slate-100 dark:border-slate-800 bg-white/80 dark:bg-darkCard/80 backdrop-blur-md flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <span class="text-2xl" id="preview-icon">📖</span>
+                <div>
+                    <h4 class="text-xs font-bold text-slate-700 dark:text-slate-200" id="preview-title">Book Title</h4>
+                    <p class="text-[10px] text-slate-400" id="preview-detail">by Author</p>
+                </div>
+            </div>
+            <button onclick="clearAttachment()" class="text-rose-500 hover:text-rose-600 p-1.5 hover:bg-rose-500/10 rounded-full transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+
+        <!-- Chat Input Bar -->
+        <div class="p-6 border-t border-slate-200 dark:border-darkBorder bg-white/50 dark:bg-darkCard/50 backdrop-blur-md">
+            <form id="chat-form" onsubmit="sendMessage(event)" class="space-y-4">
+                {% csrf_token %}
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <div class="relative flex-grow">
+                        <input type="text" id="message-input" placeholder="Type a message or share materials..." required
+                            class="w-full pl-4 pr-12 py-3 rounded-2xl border border-slate-200 dark:border-darkBorder bg-white dark:bg-darkCard text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/50">
+                        
+                        <!-- Share Material Toggle Button inside Input -->
+                        <button type="button" onclick="toggleShareModal()" title="Attach Study Material"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-sky-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all">
+                            📎
+                        </button>
+                    </div>
+                    
+                    <div class="flex items-center justify-between sm:justify-end gap-3">
+                        <!-- Anonymous Toggle -->
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="anonymous-toggle" checked class="sr-only peer">
+                            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-sky-500"></div>
+                            <span class="ml-2 text-xs font-bold text-slate-600 dark:text-slate-300 select-none">Send Anonymously</span>
+                        </label>
+
+                        <button type="submit" class="px-6 py-3 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-2xl text-sm transition-all shadow-md flex items-center space-x-2">
+                            <span>Send</span>
+                            <svg class="w-3.5 h-3.5 transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Material Sharing Modal Overlay -->
+<div id="share-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div class="bg-white dark:bg-darkCard border border-slate-200 dark:border-darkBorder w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl p-6 relative animate-in fade-in duration-300">
+        <h3 class="text-lg font-bold font-display text-slate-800 dark:text-slate-100 flex items-center space-x-2">
+            <span>📎</span><span>Share Study Resource</span>
+        </h3>
+        <p class="text-xs text-slate-400 mt-1">Search and select a Book, Past Paper, or Lecture slide to share directly to the chat channel.</p>
+        
+        <div class="mt-4">
+            <input type="text" id="share-search" placeholder="Type name, course code, or author..." oninput="searchMaterials()"
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-darkBorder bg-slate-50 dark:bg-slate-900/50 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/50">
+        </div>
+        
+        <div class="mt-4 overflow-y-auto max-h-60 space-y-1.5" id="share-results">
+            <p class="text-xs text-center text-slate-400 py-6">Start typing to search UniHub library...</p>
+        </div>
+
+        <div class="mt-6 flex justify-end">
+            <button onclick="toggleShareModal()" class="px-4 py-2 border border-slate-200 dark:border-darkBorder text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-sm font-semibold transition-colors">
+                Cancel
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentDeptId = null;
+    let lastMessageId = 0;
+    let pollInterval = null;
+    let selectedAttachment = null;
+
+    function switchChannel(deptId, btnElement) {
+        currentDeptId = deptId;
+        lastMessageId = 0;
+        
+        // Update styling of channels
+        document.querySelectorAll('#channels-list button').forEach(btn => {
+            btn.classList.remove('bg-sky-500', 'text-white', 'shadow-md', 'active-channel');
+            btn.classList.add('text-slate-600', 'dark:text-slate-400', 'hover:bg-slate-100', 'dark:hover:bg-slate-800/50');
+        });
+        
+        btnElement.classList.remove('text-slate-600', 'dark:text-slate-400', 'hover:bg-slate-100', 'dark:hover:bg-slate-800/50');
+        btnElement.classList.add('bg-sky-500', 'text-white', 'shadow-md', 'active-channel');
+        
+        // Update headers
+        const title = btnElement.querySelector('span:nth-child(2)').textContent;
+        document.getElementById('active-channel-title').textContent = title;
+        document.getElementById('channel-desc').textContent = deptId ? `Academic discussion for ${title}` : "Ask questions, share advice, and help peers";
+        
+        document.getElementById('message-container').innerHTML = `
+            <div class="flex items-center justify-center h-full text-slate-400">
+                <div class="text-center">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500 mx-auto mb-2"></div>
+                    <p class="text-xs">Loading channel history...</p>
+                </div>
+            </div>
+        `;
+        
+        fetchMessages(true);
+    }
+
+    async function fetchMessages(clearScreen = false) {
+        try {
+            const url = `/chat/messages/?dept_id=${currentDeptId || ''}&last_id=${lastMessageId}`;
+            const response = await fetch(url);
+            const data = await response.json();
+            
+            const container = document.getElementById('message-container');
+            if (clearScreen) {
+                container.innerHTML = '';
+            }
+            
+            if (data.messages && data.messages.length > 0) {
+                let shouldScroll = container.scrollTop + container.clientHeight >= container.scrollHeight - 100;
+                
+                data.messages.forEach(msg => {
+                    if (msg.id > lastMessageId) {
+                        lastMessageId = msg.id;
+                    }
+                    appendMessageUI(msg);
+                });
+                
+                if (shouldScroll || clearScreen) {
+                    container.scrollTop = container.scrollHeight;
+                }
+            } else if (clearScreen) {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-full text-slate-400 select-none">
+                        <span class="text-4xl mb-2">🎈</span>
+                        <p class="text-xs font-semibold">Welcome to the channel!</p>
+                        <p class="text-[10px] opacity-75">Be the first to say hi.</p>
+                    </div>
+                `;
+            }
+        } catch (err) {
+            console.error('Error fetching messages:', err);
+        }
+    }
+
+    function appendMessageUI(msg) {
+        const container = document.getElementById('message-container');
+        
+        // Remove empty state if present
+        const emptyState = container.querySelector('.select-none');
+        if (emptyState) {
+            container.removeChild(emptyState);
+        }
+        
+        const wrapper = document.createElement('div');
+        wrapper.className = `flex flex-col ${msg.is_self ? 'items-end' : 'items-start'} space-y-1 w-full animate-in fade-in duration-200`;
+        
+        let headerHTML = '';
+        if (!msg.is_self) {
+            headerHTML = `
+                <div class="flex items-center space-x-2">
+                    <span class="text-[10px] font-bold uppercase bg-gradient-to-r ${msg.sender_color} bg-clip-text text-transparent">${msg.sender_name}</span>
+                    ${msg.is_anonymous ? '<span class="text-[9px] bg-slate-200/60 dark:bg-slate-800 text-slate-400 px-1 py-0.2 rounded font-bold">ANON</span>' : ''}
+                </div>
+            `;
+        } else {
+            headerHTML = `
+                <span class="text-[10px] font-bold text-slate-400">${msg.is_anonymous ? 'You (Anonymous)' : 'You'}</span>
+            `;
+        }
+        
+        let sharedCard = '';
+        if (msg.shared_item) {
+            sharedCard = `
+                <div class="mt-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex items-start space-x-3 w-72 shrink-0">
+                    <span class="text-2xl">${msg.shared_item.icon}</span>
+                    <div class="flex-1 min-w-0">
+                        <h4 class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">${msg.shared_item.title}</h4>
+                        <p class="text-[10px] text-slate-400 truncate">${msg.shared_item.detail}</p>
+                        <a href="${msg.shared_item.url}" class="inline-block mt-2 text-[10px] font-bold text-sky-500 hover:underline">
+                            Open Material →
+                        </a>
+                    </div>
+                </div>
+            `;
+        }
+        
+        const bubbleBg = msg.is_self 
+            ? 'bg-sky-500 text-white rounded-br-none rounded-2xl shadow-sm' 
+            : 'bg-white dark:bg-darkCard border border-slate-200 dark:border-darkBorder text-slate-800 dark:text-slate-100 rounded-bl-none rounded-2xl shadow-sm';
+            
+        wrapper.innerHTML = `
+            ${headerHTML}
+            <div class="max-w-[75%]">
+                <div class="px-4 py-2.5 text-sm ${bubbleBg}">
+                    <p class="whitespace-pre-wrap leading-relaxed">${escapeHTML(msg.message)}</p>
+                    ${sharedCard}
+                </div>
+                <div class="text-[9px] text-slate-400 mt-0.5 text-right w-full px-1">${msg.created_at}</div>
+            </div>
+        `;
+        
+        container.appendChild(wrapper);
+    }
+
+    function escapeHTML(str) {
+        return str.replace(/[&<>'"]/g, 
+            tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+        );
+    }
+
+    async function sendMessage(e) {
+        e.preventDefault();
+        const input = document.getElementById('message-input');
+        const text = input.value.trim();
+        const isAnon = document.getElementById('anonymous-toggle').checked;
+        
+        if (!text && !selectedAttachment) return;
+        
+        const formData = new FormData();
+        formData.append('message', text);
+        formData.append('is_anonymous', isAnon);
+        if (currentDeptId) {
+            formData.append('dept_id', currentDeptId);
+        }
+        if (selectedAttachment) {
+            formData.append('shared_type', selectedAttachment.type);
+            formData.append('shared_id', selectedAttachment.id);
+        }
+        
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+        
+        input.value = '';
+        clearAttachment();
+        
+        try {
+            await fetch('/chat/send/', {
+                method: 'POST',
+                body: formData
+            });
+            fetchMessages();
+        } catch (err) {
+            console.error('Error sending message:', err);
+        }
+    }
+
+    // Attachment Helpers
+    function toggleShareModal() {
+        const modal = document.getElementById('share-modal');
+        modal.classList.toggle('hidden');
+        if (!modal.classList.contains('hidden')) {
+            document.getElementById('share-search').focus();
+            document.getElementById('share-search').value = '';
+            document.getElementById('share-results').innerHTML = '<p class="text-xs text-center text-slate-400 py-6">Start typing to search UniHub library...</p>';
+        }
+    }
+
+    let searchTimeout = null;
+    function searchMaterials() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(async () => {
+            const query = document.getElementById('share-search').value.trim();
+            if (query.length < 2) {
+                document.getElementById('share-results').innerHTML = '<p class="text-xs text-center text-slate-400 py-6">Type at least 2 characters...</p>';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/chat/search/?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                
+                const resultsContainer = document.getElementById('share-results');
+                resultsContainer.innerHTML = '';
+                
+                if (data.results && data.results.length > 0) {
+                    data.results.forEach(item => {
+                        const btn = document.createElement('button');
+                        btn.className = "w-full text-left px-4 py-2.5 rounded-xl text-xs hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-transparent hover:border-slate-200 dark:hover:border-slate-700 flex flex-col";
+                        btn.onclick = () => selectAttachment(item);
+                        
+                        btn.innerHTML = `
+                            <span class="font-bold text-slate-700 dark:text-slate-200">${item.title}</span>
+                            <span class="text-[10px] text-slate-400">${item.detail}</span>
+                        `;
+                        resultsContainer.appendChild(btn);
+                    });
+                } else {
+                    resultsContainer.innerHTML = '<p class="text-xs text-center text-slate-400 py-6">No matching materials found</p>';
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }, 300);
+    }
+
+    function selectAttachment(item) {
+        selectedAttachment = item;
+        
+        let icon = '📖';
+        if (item.type === 'paper') icon = '📝';
+        if (item.type === 'lecture') icon = '🛝';
+        
+        document.getElementById('preview-icon').textContent = icon;
+        document.getElementById('preview-title').textContent = item.title;
+        document.getElementById('preview-detail').textContent = item.detail;
+        
+        document.getElementById('attachment-preview').classList.remove('hidden');
+        toggleShareModal();
+    }
+
+    function clearAttachment() {
+        selectedAttachment = null;
+        document.getElementById('attachment-preview').classList.add('hidden');
+    }
+
+    // Initialize Long Polling
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchMessages(true);
+        pollInterval = setInterval(() => fetchMessages(false), 3000);
+    });
+
+    window.addEventListener('beforeunload', () => {
+        clearInterval(pollInterval);
+    });
+</script>
+{% endblock %}

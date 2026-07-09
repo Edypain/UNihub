@@ -21,7 +21,7 @@ def book_list(request):
     query = request.GET.get('q', '').strip()
     dept_id = request.GET.get('dept', '').strip()
     
-    books = Book.objects.all()
+    books = Book.objects.all().select_related('department')
     departments = Department.objects.all()
     recommended = []
 

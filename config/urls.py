@@ -24,6 +24,15 @@ urlpatterns = [
     path('profile/', core_views.edit_profile, name='edit_profile'),
     path('dashboard/', core_views.analytics_dashboard, name='analytics_dashboard'),
     
+    # Anonymous Chat
+    path('chat/', core_views.chat_lobby, name='chat_lobby'),
+    path('chat/messages/', core_views.get_chat_messages, name='get_chat_messages'),
+    path('chat/send/', core_views.send_chat_message, name='send_chat_message'),
+    path('chat/search/', core_views.search_shareable_materials, name='search_shareable_materials'),
+    
+    # Fast Viewer
+    path('viewer/<str:type>/<int:id>/', core_views.view_material, name='view_material'),
+    
     # Authentication
     path('login/', auth_views.LoginView.as_view(template_name='core/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(next_page='/'), name='logout'),

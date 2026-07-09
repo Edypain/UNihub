@@ -61,7 +61,7 @@
                     <div class="flex-1 min-w-0">
                         <h3 class="font-bold text-sm text-slate-800 dark:text-slate-100 truncate">{{ book.title }}</h3>
                         <p class="text-xs text-slate-500 dark:text-slate-400 truncate">{{ book.author }}</p>
-                        <a href="{{ book.pdf_file.url }}" target="_blank" class="inline-block mt-2 text-xs font-bold text-sky-600 dark:text-sky-400 hover:underline">Open PDF →</a>
+                        <a href="{% url 'view_material' 'book' book.id %}" class="inline-block mt-2 text-xs font-bold text-sky-600 dark:text-sky-400 hover:underline">Open PDF →</a>
                     </div>
                 </div>
             </div>
@@ -109,7 +109,7 @@
                     </div>
                     {% endif %}
                     <div class="mt-auto pt-3 flex gap-2">
-                        <a href="{{ book.pdf_file.url }}" target="_blank" class="flex-1 text-center text-xs font-bold text-white bg-sky-500 hover:bg-sky-600 py-2 px-2 rounded-lg transition-colors">
+                        <a href="{% url 'view_material' 'book' book.id %}" class="flex-1 text-center text-xs font-bold text-white bg-sky-500 hover:bg-sky-600 py-2 px-2 rounded-lg transition-colors">
                             Read
                         </a>
                         <a href="{{ book.pdf_file.url }}" download class="p-2 rounded-lg border border-slate-200 dark:border-darkBorder hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors" title="Download">

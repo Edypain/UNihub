@@ -43,3 +43,27 @@ class Student(models.Model):
         verbose_name = "Student"
         verbose_name_plural = "Students"
         ordering = ['-user']
+
+
+class ChatMessage(models.Model):
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='chat_messages')
+    is_anonymous = models.BooleanField(default=True)
+    anonymous_name = models.CharField(max_length=100, blank=True)
+    message = models.TextField(blank=True)
+    
+    # Optional channel grouping by department
+    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True, related_name='chat_messages')
+    
+    # Shared resources
+    shared_book = models.ForeignKey('books.Book', on_delete=models.SET_NULL, null=True, blank=True, related_name='chat_shares')
+    shared_paper = models.ForeignKey('papers.PastPaper', on_delete=models.SET_NULL, null=True, blank=True, related_name='chat_shares')
+    shared_lecture = models.ForeignKey('papers.LectureSlide', on_delete=models.SET_NULL, null=True, blank=True, related_name='chat_shares')
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        name = self.anonymous_name if self.is_anonymous else self.sender.username
+        return f"{name}: {self.message[:30]}"
+
+    class Meta:
+        ordering = ['created_at']
