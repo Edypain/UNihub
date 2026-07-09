@@ -51,7 +51,7 @@
         </h2>
         <div class="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
             {% for book in recommended %}
-            <div class="bg-white dark:bg-darkCard border border-sky-100 dark:border-sky-900/30 rounded-xl p-4 hover:shadow-md transition-all group">
+            <div class="bg-white dark:bg-darkCard border border-sky-100 dark:border-sky-900/30 rounded-xl p-4 hover:shadow-md transition-all group reveal">
                 <div class="flex items-start space-x-3">
                     {% if book.cover_image %}
                         <img src="{{ book.cover_image.url }}" class="w-12 h-14 object-cover rounded-lg shrink-0 shadow-sm">

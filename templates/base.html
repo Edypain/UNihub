@@ -443,5 +443,121 @@
             }
         });
     </script>
+    <!-- UI Enhancement Scripts -->
+    <style>
+        /* Scroll Animation Classes */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Mouse Glow Effect */
+        #mouse-glow {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(14, 165, 233, 0.05) 0%, rgba(0,0,0,0) 50%);
+            border-radius: 50%;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            z-index: 0;
+            transition: opacity 0.3s ease;
+        }
+        .dark #mouse-glow {
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, rgba(0,0,0,0) 50%);
+        }
+        
+        /* Button Ripple */
+        .ripple-effect {
+            position: absolute;
+            border-radius: 50%;
+            transform: scale(0);
+            animation: ripple-animation 0.6s linear;
+            background-color: rgba(255, 255, 255, 0.3);
+            pointer-events: none;
+        }
+        @keyframes ripple-animation {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+    </style>
+
+    <div id="mouse-glow"></div>
+
+    <script>
+        // 1. Mouse Glow Effect
+        const glow = document.getElementById('mouse-glow');
+        document.addEventListener('mousemove', (e) => {
+            requestAnimationFrame(() => {
+                glow.style.left = e.clientX + 'px';
+                glow.style.top = e.clientY + 'px';
+            });
+        });
+
+        // 2. Scroll Reveal Animation
+        function reveal() {
+            var reveals = document.querySelectorAll('.reveal');
+            for (var i = 0; i < reveals.length; i++) {
+                var windowHeight = window.innerHeight;
+                var elementTop = reveals[i].getBoundingClientRect().top;
+                var elementVisible = 50;
+                if (elementTop < windowHeight - elementVisible) {
+                    reveals[i].classList.add('active');
+                }
+            }
+        }
+        window.addEventListener('scroll', reveal);
+        document.addEventListener('turbo:load', reveal);
+        setTimeout(reveal, 100);
+
+        // 3. Dynamic Tab Title
+        let originalTitle = document.title;
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden) {
+                document.title = "📚 Come back to study!";
+            } else {
+                document.title = originalTitle;
+            }
+        });
+
+        // 4. Button Ripple Effect
+        function createRipple(event) {
+            const button = event.currentTarget;
+            const circle = document.createElement("span");
+            const diameter = Math.max(button.clientWidth, button.clientHeight);
+            const radius = diameter / 2;
+            
+            circle.style.width = circle.style.height = `${diameter}px`;
+            circle.style.left = `${event.clientX - button.getBoundingClientRect().left - radius}px`;
+            circle.style.top = `${event.clientY - button.getBoundingClientRect().top - radius}px`;
+            circle.classList.add("ripple-effect");
+            
+            const rippleElement = button.querySelector('.ripple-effect');
+            if (rippleElement) {
+                rippleElement.remove();
+            }
+            button.appendChild(circle);
+        }
+        
+        function initRipples() {
+            const buttons = document.querySelectorAll('button, .btn-ripple, a.bg-sky-500, a.bg-brand-600');
+            for (const button of buttons) {
+                if(window.getComputedStyle(button).position === 'static') {
+                    button.style.position = 'relative';
+                }
+                button.style.overflow = 'hidden';
+                button.addEventListener('click', createRipple);
+            }
+        }
+        document.addEventListener('turbo:load', initRipples);
+        initRipples();
+    </script>
 </body>
 </html>
