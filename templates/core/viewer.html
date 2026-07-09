@@ -88,18 +88,26 @@
 
         <!-- Inline PDF embed container -->
         <div class="lg:col-span-3 order-1 lg:order-2">
-            <div class="glass-card bg-slate-900 border border-slate-800 w-full h-[60vh] sm:h-[75vh] rounded-3xl overflow-hidden shadow-2xl relative">
+            <div class="glass-card bg-slate-900 border border-slate-800 w-full h-[75vh] sm:h-[85vh] rounded-3xl overflow-hidden shadow-2xl relative flex flex-col">
                 <!-- Fallback info header -->
-                <div class="absolute top-0 inset-x-0 bg-slate-950/80 px-6 py-3 text-xs text-slate-400 border-b border-slate-800 flex justify-between items-center z-10 backdrop-blur-md">
-                    <span>Previewing Document</span>
-                    <span class="text-slate-500">Press Download button if preview doesn't render</span>
+                <div class="bg-slate-950/80 px-6 py-3 text-xs text-slate-400 border-b border-slate-800 flex justify-between items-center z-10 backdrop-blur-md shrink-0">
+                    <span class="font-bold text-sky-400 flex items-center space-x-2"><svg class="w-4 h-4 animate-spin-slow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> <span>Fast Native Viewer</span></span>
+                    <span class="text-slate-500 hidden sm:inline">If preview fails, use the Download button.</span>
                 </div>
                 
-                <!-- PDF Renderer iframe/embed -->
-                <iframe src="https://docs.google.com/gview?url={{ request.scheme }}://{{ request.get_host }}{{ file_url }}&embedded=true" 
-                    class="w-full h-full pt-10" 
-                    frameborder="0">
-                </iframe>
+                <!-- Native PDF Renderer object embed -->
+                <div class="flex-1 w-full relative bg-[#323639]">
+                    <object data="{{ file_url }}" type="application/pdf" class="absolute inset-0 w-full h-full">
+                        <div class="flex flex-col items-center justify-center h-full space-y-4 p-8 text-center bg-slate-900">
+                            <span class="text-4xl">📄</span>
+                            <h3 class="text-lg font-bold text-slate-200">Browser cannot render PDF natively</h3>
+                            <p class="text-sm text-slate-400 max-w-md mx-auto">Your browser does not support inline PDF viewing or the file type is unsupported for preview.</p>
+                            <a href="{{ file_url }}" download class="px-5 py-2.5 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl text-sm transition-all shadow-md">
+                                Download File Directly
+                            </a>
+                        </div>
+                    </object>
+                </div>
             </div>
         </div>
     </div>
