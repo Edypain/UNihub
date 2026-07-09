@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="min-h-screen flex items-center justify-center px-4 py-12">
-    <div class="w-full max-w-4xl grid gap-6 overflow-hidden rounded-3xl bg-white shadow-2xl dark:bg-darkCard md:grid-cols-2">
+    <div class="w-full max-w-4xl grid gap-0 overflow-hidden rounded-3xl glass-card bg-white/40 dark:bg-darkCard/40 backdrop-blur-md shadow-2xl border border-slate-200/50 dark:border-darkBorder/50 md:grid-cols-2">
         <div class="hidden md:flex flex-col justify-center gap-6 bg-gradient-to-b from-sky-500 via-cyan-500 to-indigo-600 p-10 text-white">
             <div class="space-y-4">
                 <span class="inline-flex items-center rounded-full bg-white/15 px-4 py-2 text-sm font-semibold uppercase tracking-[0.2em] text-slate-100">Student Hub</span>
@@ -35,7 +35,7 @@
 
                 <div>
                     <label for="{{ form.username.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Username</label>
-                    <input type="text" name="{{ form.username.name }}" id="{{ form.username.id_for_label }}" value="{{ form.username.value|default:'' }}" class="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-brand-500 focus:ring-4 focus:ring-sky-100 dark:border-slate-700 dark:bg-darkBg dark:text-slate-100" placeholder="Enter your username">
+                    <input type="text" name="{{ form.username.name }}" id="{{ form.username.id_for_label }}" value="{{ form.username.value|default:'' }}" class="mt-2 w-full rounded-2xl border border-slate-300 bg-white/60 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-brand-500 focus:ring-4 focus:ring-sky-100 dark:border-slate-700 dark:bg-darkBg/60 backdrop-blur-sm dark:text-slate-100" placeholder="Enter your username">
                     {% if form.username.errors %}
                         <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ form.username.errors.0 }}</p>
                     {% endif %}
@@ -43,7 +43,7 @@
 
                 <div>
                     <label for="{{ form.password.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Password</label>
-                    <input type="password" name="{{ form.password.name }}" id="{{ form.password.id_for_label }}" class="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-brand-500 focus:ring-4 focus:ring-sky-100 dark:border-slate-700 dark:bg-darkBg dark:text-slate-100" placeholder="Enter your password">
+                    <input type="password" name="{{ form.password.name }}" id="{{ form.password.id_for_label }}" class="mt-2 w-full rounded-2xl border border-slate-300 bg-white/60 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-brand-500 focus:ring-4 focus:ring-sky-100 dark:border-slate-700 dark:bg-darkBg/60 backdrop-blur-sm dark:text-slate-100" placeholder="Enter your password">
                     {% if form.password.errors %}
                         <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ form.password.errors.0 }}</p>
                     {% endif %}
