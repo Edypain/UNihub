@@ -390,5 +390,58 @@
         });
     </script>
     {% endif %}
+    <!-- Quotes Popup Script -->
+    <script>
+        const quotes = [
+            { text: "The important thing is not to stop questioning. Curiosity has its own reason for existence.", author: "Albert Einstein" },
+            { text: "Nothing in life is to be feared, it is only to be understood. Now is the time to understand more, so that we may fear less.", author: "Marie Curie" },
+            { text: "Education is not the learning of facts, but the training of the mind to think.", author: "Albert Einstein" },
+            { text: "What we know is a drop, what we don't know is an ocean.", author: "Isaac Newton" },
+            { text: "I have no special talent. I am only passionately curious.", author: "Albert Einstein" },
+            { text: "By denying scientific principles, one may maintain any paradox.", author: "Galileo Galilei" },
+            { text: "Science is a way of thinking much more than it is a body of knowledge.", author: "Carl Sagan" },
+            { text: "An investment in knowledge pays the best interest.", author: "Benjamin Franklin" },
+            { text: "The beautiful thing about learning is nobody can take it away from you.", author: "B.B. King" }
+        ];
+
+        function showQuote() {
+            // Check if user is on mobile width, maybe skip showing to save space? No, let's show it but make it small.
+            const quote = quotes[Math.floor(Math.random() * quotes.length)];
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-4 right-4 z-50 p-4 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-2xl rounded-2xl max-w-sm animate-fade-in transition-all duration-500 transform translate-y-0';
+            toast.innerHTML = `
+                <div class="flex items-start gap-3">
+                    <div class="text-sky-500 mt-1">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>
+                    </div>
+                    <div>
+                        <p class="text-sm text-slate-700 dark:text-slate-300 italic mb-2 leading-relaxed">"${quote.text}"</p>
+                        <p class="text-xs font-bold text-slate-500 dark:text-slate-400">— ${quote.author}</p>
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 ml-auto p-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.classList.add('opacity-0', 'translate-y-4');
+                    setTimeout(() => toast.remove(), 500);
+                }
+            }, 10000);
+        }
+
+        // Show a quote randomly, but not on every single page load
+        if (Math.random() < 0.4) {
+            setTimeout(showQuote, 2500);
+        }
+        document.addEventListener('turbo:load', () => {
+            if (Math.random() < 0.4) {
+                setTimeout(showQuote, 2500);
+            }
+        });
+    </script>
 </body>
 </html>
