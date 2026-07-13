@@ -89,3 +89,45 @@
     </div>
 </div>
 {% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+    const searchInput = document.querySelector('input[name="q"]');
+    const tbody       = document.querySelector('tbody');
+
+    if (!searchInput || !tbody) return;
+
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+
+    let noRow = document.getElementById('live-no-results-lectures');
+    if (!noRow) {
+        noRow = document.createElement('tr');
+        noRow.id = 'live-no-results-lectures';
+        noRow.className = 'hidden';
+        noRow.innerHTML = `<td colspan="5" class="py-10 text-center">
+            <div class="text-4xl mb-2">🔍</div>
+            <p class="text-slate-500 dark:text-slate-400 font-semibold">No slides match your search.</p>
+        </td>`;
+        tbody.appendChild(noRow);
+    }
+
+    function filterRows() {
+        const q = searchInput.value.toLowerCase().trim();
+        let visible = 0;
+        rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            const show = !q || text.includes(q);
+            row.style.display = show ? '' : 'none';
+            if (show) visible++;
+        });
+        noRow.classList.toggle('hidden', visible > 0);
+    }
+
+    searchInput.addEventListener('input', filterRows);
+    searchInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && searchInput.value.trim()) { e.preventDefault(); filterRows(); }
+    });
+})();
+</script>
+{% endblock %}

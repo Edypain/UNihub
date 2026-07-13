@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="mb-8">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-bold font-display text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                <span class="text-sky-500">🤝</span> Collabo Workspace
+            </h1>
+            <p class="text-slate-500 dark:text-slate-400 mt-1">Manage your student group projects and academic collaboration.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <button onclick="document.getElementById('join-modal').classList.remove('hidden')" class="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold py-2.5 px-5 rounded-xl transition-colors shadow-sm">
+                Join Group
+            </button>
+            <button onclick="document.getElementById('create-modal').classList.remove('hidden')" class="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2.5 px-5 rounded-xl transition-colors shadow-sm flex items-center gap-2">
+                <span>+ Create Group</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+{% if groups %}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for group in groups %}
+    <a href="{% url 'group_detail' group.id %}" class="glass-card rounded-2xl p-6 hover:shadow-xl transition-all duration-300 group-hover transform hover:-translate-y-1 block relative overflow-hidden group">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-sky-500/10 rounded-full blur-3xl -mr-10 -mt-10 group-hover:bg-sky-500/20 transition-colors"></div>
+        <div class="flex justify-between items-start mb-4 relative z-10">
+            <div>
+                <span class="text-xs font-bold text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/30 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                    {% if group.department %}{{ group.department.code }}{% else %}General{% endif %}
+                </span>
+                <h2 class="text-xl font-bold text-slate-800 dark:text-slate-100 mt-3">{{ group.name }}</h2>
+            </div>
+        </div>
+        {% if group.description %}
+        <p class="text-sm text-slate-500 dark:text-slate-400 mb-6 line-clamp-2 relative z-10">{{ group.description }}</p>
+        {% else %}
+        <p class="text-sm text-slate-400 italic mb-6 relative z-10">No description provided.</p>
+        {% endif %}
+        
+        <div class="flex items-center justify-between mt-auto pt-4 border-t border-slate-100 dark:border-slate-800/50 relative z-10">
+            <div class="flex items-center gap-2">
+                <div class="flex -space-x-2">
+                    {% for member in group.members.all|slice:":3" %}
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-sky-400 to-indigo-500 border-2 border-white dark:border-darkCard flex items-center justify-center text-white text-xs font-bold shadow-sm" title="{{ member.username }}">
+                        {{ member.username|make_list|first|upper }}
+                    </div>
+                    {% endfor %}
+                    {% if group.members.count > 3 %}
+                    <div class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 border-2 border-white dark:border-darkCard flex items-center justify-center text-slate-500 dark:text-slate-400 text-xs font-bold shadow-sm">
+                        +{{ group.members.count|add:"-3" }}
+                    </div>
+                    {% endif %}
+                </div>
+                <span class="text-xs text-slate-500 font-medium ml-1">{{ group.members.count }} member{{ group.members.count|pluralize }}</span>
+            </div>
+            <div class="text-sky-500 group-hover:translate-x-1 transition-transform">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<div class="glass-card rounded-2xl p-16 text-center shadow-sm">
+    <div class="text-6xl mb-4">🤝</div>
+    <h3 class="text-2xl font-bold text-slate-800 dark:text-slate-100 font-display">No Study Groups Yet</h3>
+    <p class="text-slate-500 dark:text-slate-400 mt-2 max-w-md mx-auto">Create a group to manage your projects, share documents, and chat with your teammates.</p>
+    <div class="mt-8 flex justify-center gap-4">
+        <button onclick="document.getElementById('create-modal').classList.remove('hidden')" class="bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 px-6 rounded-xl transition-colors shadow-md">
+            + Create a Group
+        </button>
+        <button onclick="document.getElementById('join-modal').classList.remove('hidden')" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold py-3 px-6 rounded-xl transition-colors shadow-sm">
+            Join with Code
+        </button>
+    </div>
+</div>
+{% endif %}
+
+<!-- Create Group Modal -->
+<div id="create-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+    <div class="bg-white dark:bg-darkCard rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
+        <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+            <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 font-display">Create Study Group</h3>
+            <button onclick="document.getElementById('create-modal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        <form action="{% url 'create_group' %}" method="POST" class="p-6">
+            {% csrf_token %}
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Group Name</label>
+                    <input type="text" name="name" required class="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Department (Optional)</label>
+                    <select name="department" class="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500">
+                        <option value="">General (No specific department)</option>
+                        {% for dept in departments %}
+                        <option value="{{ dept.id }}">{{ dept.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Description (Optional)</label>
+                    <textarea name="description" rows="3" class="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"></textarea>
+                </div>
+            </div>
+            <div class="mt-6">
+                <button type="submit" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-2.5 rounded-xl transition-colors">Create Group</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Join Group Modal -->
+<div id="join-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+    <div class="bg-white dark:bg-darkCard rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all">
+        <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+            <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 font-display">Join Study Group</h3>
+            <button onclick="document.getElementById('join-modal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        <form action="{% url 'join_group' %}" method="POST" class="p-6">
+            {% csrf_token %}
+            <div>
+                <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Invite Code</label>
+                <input type="text" name="invite_code" placeholder="e.g. A1B2C3" required class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 uppercase text-center tracking-[0.25em] font-mono text-lg font-bold placeholder:tracking-normal placeholder:font-sans placeholder:font-normal">
+            </div>
+            <div class="mt-6">
+                <button type="submit" class="w-full bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white font-bold py-2.5 rounded-xl transition-colors">Join Now</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

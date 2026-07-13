@@ -74,10 +74,18 @@
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border-bottom: 1px solid rgba(229, 231, 235, 0.5);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .dark .glass-nav {
             background: rgba(9, 13, 22, 0.7);
             border-bottom: 1px solid rgba(31, 41, 61, 0.5);
+        }
+        /* Navbar scroll-shrink */
+        .nav-shrunk {
+            box-shadow: 0 4px 24px -4px rgba(14,165,233,0.10);
+        }
+        .nav-shrunk .nav-inner {
+            height: 52px !important;
         }
 
         .glass-card {
@@ -121,6 +129,49 @@
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
+        }
+
+        /* Active nav link */
+        .nav-link-active {
+            color: #0ea5e9 !important;
+            position: relative;
+        }
+        .nav-link-active::after {
+            content: '';
+            position: absolute;
+            left: 0; right: 0; bottom: -4px;
+            height: 2px;
+            border-radius: 9999px;
+            background: linear-gradient(90deg, #0ea5e9, #6366f1);
+        }
+
+        /* Skeleton shimmer */
+        @keyframes shimmer {
+            0%   { background-position: -600px 0; }
+            100% { background-position: 600px 0; }
+        }
+        .skeleton {
+            background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+            background-size: 600px 100%;
+            animation: shimmer 1.4s infinite linear;
+            border-radius: 10px;
+        }
+        .dark .skeleton {
+            background: linear-gradient(90deg, #1e293b 25%, #0f172a 50%, #1e293b 75%);
+            background-size: 600px 100%;
+            animation: shimmer 1.4s infinite linear;
+        }
+
+        /* Page-load top progress bar */
+        #page-progress {
+            position: fixed;
+            top: 0; left: 0;
+            height: 2.5px;
+            width: 0%;
+            background: linear-gradient(90deg, #0ea5e9, #6366f1, #d946ef);
+            z-index: 9999;
+            transition: width 0.2s ease, opacity 0.4s ease;
+            pointer-events: none;
         }
     </style>
     <script>
@@ -168,9 +219,10 @@
 </head>
 <body class="bg-slate-50 text-slate-800 dark:bg-darkBg dark:text-slate-200 min-h-screen flex flex-col font-sans antialiased">
     <!-- Navbar -->
-    <nav class="sticky top-0 z-50 glass-nav transition-all duration-300">
+    <div id="page-progress"></div>
+    <nav id="main-nav" class="sticky top-0 z-50 glass-nav transition-all duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
+            <div class="nav-inner flex justify-between h-16 items-center" style="transition: height 0.3s ease;">
                 <!-- Logo & Brand -->
                 <div class="flex items-center space-x-3">
                     <a href="/" class="flex items-center space-x-2 group">
@@ -196,6 +248,9 @@
                     <a href="{% url 'chat_lobby' %}" class="text-sm font-semibold hover:text-sky-500 text-slate-600 dark:text-slate-300 transition-colors flex items-center space-x-1">
                         <span>Lobby Chat</span>
                         <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-rose-500 text-white shrink-0 animate-bounce">NEW</span>
+                    </a>
+                    <a href="{% url 'collabo_home' %}" class="text-sm font-semibold hover:text-sky-500 text-slate-600 dark:text-slate-300 transition-colors flex items-center space-x-1">
+                        <span>Collabo</span>
                     </a>
                     {% endif %}
                     
@@ -274,6 +329,7 @@
                 <a href="{% url 'ai_assistant' %}" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-slate-50 dark:hover:bg-slate-800 text-sky-500">AI Assistant</a>
                 {% if user.is_authenticated %}
                 <a href="{% url 'chat_lobby' %}" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-slate-50 dark:hover:bg-slate-800 text-indigo-500">Lobby Chat</a>
+                <a href="{% url 'collabo_home' %}" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-slate-50 dark:hover:bg-slate-800 text-sky-500">Collabo</a>
                 {% endif %}
                 {% if user.is_authenticated %}
                     <a href="{% url 'upload_book' %}" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-slate-50 dark:hover:bg-slate-800">Upload Book</a>
@@ -294,6 +350,7 @@
             </div>
         </div>
     </nav>
+    <!-- ✅ Enhancement: close nav tag; progress bar + JS below -->
 
     <!-- Main Content -->
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -558,6 +615,106 @@
         }
         document.addEventListener('turbo:load', initRipples);
         initRipples();
+
+        // ── ENHANCEMENT 5: Scroll-shrink Navbar ──────────────────────────────
+        (function () {
+            const nav = document.getElementById('main-nav');
+            const inner = nav ? nav.querySelector('.nav-inner') : null;
+            function handleScroll() {
+                if (!nav) return;
+                if (window.scrollY > 40) {
+                    nav.classList.add('nav-shrunk');
+                    if (inner) inner.style.height = '52px';
+                } else {
+                    nav.classList.remove('nav-shrunk');
+                    if (inner) inner.style.height = '64px';
+                }
+            }
+            window.addEventListener('scroll', handleScroll, { passive: true });
+            handleScroll();
+        })();
+
+        // ── ENHANCEMENT 6: Active Nav-Link Highlighter ───────────────────────
+        (function () {
+            const path = window.location.pathname;
+            document.querySelectorAll('#main-nav a[href]').forEach(link => {
+                const href = link.getAttribute('href');
+                if (href && href !== '/' && path.startsWith(href)) {
+                    link.classList.add('nav-link-active');
+                } else if (href === '/' && (path === '/' || path === '')) {
+                    link.classList.add('nav-link-active');
+                }
+            });
+        })();
+
+        // ── ENHANCEMENT 7: Animated Number Counters ──────────────────────────
+        function animateCounter(el) {
+            const target = parseInt(el.dataset.count, 10);
+            if (isNaN(target)) return;
+            const duration = 1200;
+            const start = performance.now();
+            function step(now) {
+                const elapsed = now - start;
+                const progress = Math.min(elapsed / duration, 1);
+                // ease-out cubic
+                const eased = 1 - Math.pow(1 - progress, 3);
+                el.textContent = Math.floor(eased * target).toLocaleString();
+                if (progress < 1) requestAnimationFrame(step);
+                else el.textContent = target.toLocaleString();
+            }
+            requestAnimationFrame(step);
+        }
+        function initCounters() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        animateCounter(entry.target);
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.4 });
+            document.querySelectorAll('[data-count]').forEach(el => observer.observe(el));
+        }
+        initCounters();
+        document.addEventListener('turbo:load', initCounters);
+
+        // ── ENHANCEMENT 8: Page-load Top Progress Bar ────────────────────────
+        (function () {
+            const bar = document.getElementById('page-progress');
+            if (!bar) return;
+            let timer;
+            function startProgress() {
+                bar.style.width = '0%';
+                bar.style.opacity = '1';
+                let w = 0;
+                clearInterval(timer);
+                timer = setInterval(() => {
+                    w += Math.random() * 8 + 2;
+                    if (w >= 90) { w = 90; clearInterval(timer); }
+                    bar.style.width = w + '%';
+                }, 100);
+            }
+            function finishProgress() {
+                clearInterval(timer);
+                bar.style.width = '100%';
+                setTimeout(() => { bar.style.opacity = '0'; bar.style.width = '0%'; }, 400);
+            }
+            document.addEventListener('turbo:click', startProgress);
+            document.addEventListener('turbo:load', finishProgress);
+            // Also fire on regular anchor clicks (non-turbo)
+            document.addEventListener('click', e => {
+                const link = e.target.closest('a[href]');
+                if (link && !link.getAttribute('href').startsWith('#') &&
+                    !link.getAttribute('href').startsWith('javascript') &&
+                    !link.hasAttribute('download') &&
+                    link.origin === location.origin) {
+                    startProgress();
+                }
+            });
+            window.addEventListener('pageshow', finishProgress);
+        })();
     </script>
+
+    {% block extra_scripts %}{% endblock %}
 </body>
 </html>

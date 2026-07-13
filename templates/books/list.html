@@ -139,3 +139,57 @@
     </div>
 </div>
 {% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+    const searchInput = document.querySelector('input[name="q"]');
+    const deptSelect  = document.querySelector('select[name="dept"]');
+    const grid        = document.querySelector('.grid.grid-cols-2');
+    const countBadge  = document.querySelector('p.text-xs.text-slate-400.mb-5');
+
+    if (!searchInput || !grid) return;
+
+    // Build a map of cards and their searchable text
+    const cards = Array.from(grid.querySelectorAll(':scope > div'));
+
+    // Build no-results placeholder once
+    let noResults = document.getElementById('live-no-results');
+    if (!noResults) {
+        noResults = document.createElement('div');
+        noResults.id = 'live-no-results';
+        noResults.className = 'col-span-full text-center py-12 hidden';
+        noResults.innerHTML = `<div class="text-5xl mb-3">🔍</div><p class="font-semibold text-slate-500 dark:text-slate-400">No books match your search.</p>`;
+        grid.appendChild(noResults);
+    }
+
+    function filterBooks() {
+        const q    = searchInput.value.toLowerCase().trim();
+        const dept = deptSelect ? deptSelect.options[deptSelect.selectedIndex].text.toLowerCase() : '';
+        let visible = 0;
+
+        cards.forEach(card => {
+            if (card === noResults) return;
+            const text = card.innerText.toLowerCase();
+            const show = (!q || text.includes(q));
+            card.style.display = show ? '' : 'none';
+            if (show) visible++;
+        });
+
+        noResults.classList.toggle('hidden', visible > 0);
+        if (countBadge) {
+            countBadge.textContent = `Showing ${visible} book${visible !== 1 ? 's' : ''}${q ? ` for "${searchInput.value}"` : ''}`;
+        }
+    }
+
+    searchInput.addEventListener('input', filterBooks);
+    // prevent form submission on Enter if doing live filter
+    searchInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && searchInput.value.trim()) {
+            e.preventDefault();
+            filterBooks();
+        }
+    });
+})();
+</script>
+{% endblock %}

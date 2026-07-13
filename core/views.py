@@ -3,7 +3,10 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .forms import StudentSignUpForm
-from .models import Department, Student, ChatMessage
+from .models import (
+    Department, Student, ChatMessage,
+    StudyGroup, GroupMembership, GroupTask, GroupDocument, GroupMessage
+)
 from books.models import Book
 from papers.models import PastPaper, LectureSlide
 from django.contrib.auth.models import User
@@ -423,4 +426,231 @@ def check_unread_messages(request):
             'vibe': latest_msg.vibe
         })
         
-    return JsonResponse({'has_new': False})
+    return JsonResponse({'has_new': False})
+
+
+# ──────────────────────────────────────────────────────────────────
+# COLLABO — Student Group Collaboration Views
+# ──────────────────────────────────────────────────────────────────
+import json
+
+@login_required
+def collabo_home(request):
+    """List of all study groups the user is a member of."""
+    my_groups = StudyGroup.objects.filter(members=request.user)
+    departments = Department.objects.all()
+    context = {
+        'groups': my_groups,
+        'departments': departments
+    }
+    return render(request, 'core/collabo/home.html', context)
+
+@login_required
+def create_group(request):
+    """Create a new study group."""
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        description = request.POST.get('description', '')
+        department_id = request.POST.get('department')
+        
+        department = None
+        if department_id:
+            try:
+                department = Department.objects.get(id=department_id)
+            except Department.DoesNotExist:
+                pass
+                
+        group = StudyGroup.objects.create(
+            name=name,
+            description=description,
+            department=department,
+            owner=request.user
+        )
+        GroupMembership.objects.create(
+            group=group,
+            user=request.user,
+            role='owner'
+        )
+        messages.success(request, f"Group '{name}' created successfully!")
+        return redirect('group_detail', pk=group.pk)
+    return redirect('collabo_home')
+
+@login_required
+def join_group(request):
+    """Join a group using an invite code."""
+    if request.method == 'POST':
+        code = request.POST.get('invite_code', '').strip().upper()
+        try:
+            group = StudyGroup.objects.get(invite_code=code)
+            if not GroupMembership.objects.filter(group=group, user=request.user).exists():
+                GroupMembership.objects.create(group=group, user=request.user, role='member')
+                messages.success(request, f"You joined '{group.name}'!")
+            else:
+                messages.info(request, f"You are already a member of '{group.name}'.")
+            return redirect('group_detail', pk=group.pk)
+        except StudyGroup.DoesNotExist:
+            messages.error(request, "Invalid invite code.")
+    return redirect('collabo_home')
+
+@login_required
+def group_detail(request, pk):
+    """Main dashboard for a specific study group."""
+    group = get_object_or_404(StudyGroup, pk=pk)
+    
+    # Ensure user is a member
+    if not GroupMembership.objects.filter(group=group, user=request.user).exists():
+        messages.error(request, "You are not a member of this group.")
+        return redirect('collabo_home')
+        
+    memberships = group.memberships.select_related('user').all()
+    tasks = group.tasks.all()
+    documents = group.documents.select_related('added_by', 'shared_book', 'shared_paper', 'shared_lecture').all()
+    
+    context = {
+        'group': group,
+        'memberships': memberships,
+        'tasks': tasks,
+        'documents': documents,
+        # Fetch resources that can be attached
+        'books': Book.objects.all(),
+        'papers': PastPaper.objects.all(),
+        'lectures': LectureSlide.objects.all(),
+    }
+    return render(request, 'core/collabo/group_detail.html', context)
+
+@login_required
+def group_task_update(request, pk):
+    """AJAX handler for updating task status or creating a new task."""
+    group = get_object_or_404(StudyGroup, pk=pk)
+    if not GroupMembership.objects.filter(group=group, user=request.user).exists():
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+        
+    if request.method == 'POST':
+        # Used for creating a task
+        title = request.POST.get('title')
+        description = request.POST.get('description', '')
+        if title:
+            task = GroupTask.objects.create(
+                group=group,
+                title=title,
+                description=description,
+                created_by=request.user,
+                status='todo'
+            )
+            return JsonResponse({'success': True, 'task_id': task.id, 'title': task.title})
+            
+    elif request.method == 'PATCH':
+        try:
+            data = json.loads(request.body)
+            task_id = data.get('task_id')
+            new_status = data.get('status')
+            
+            task = GroupTask.objects.get(id=task_id, group=group)
+            if new_status in dict(GroupTask.STATUS_CHOICES):
+                task.status = new_status
+                task.save()
+                return JsonResponse({'success': True})
+        except (ValueError, GroupTask.DoesNotExist):
+            pass
+            
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+@login_required
+def group_add_doc(request, pk):
+    """AJAX POST to add a document link to the group."""
+    group = get_object_or_404(StudyGroup, pk=pk)
+    if not GroupMembership.objects.filter(group=group, user=request.user).exists():
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+        
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        url = request.POST.get('url', '')
+        item_type = request.POST.get('item_type')
+        item_id = request.POST.get('item_id')
+        
+        if not title:
+            return JsonResponse({'error': 'Title is required'}, status=400)
+            
+        doc = GroupDocument(group=group, title=title, added_by=request.user)
+        
+        if url:
+            doc.url = url
+        elif item_type and item_id:
+            try:
+                if item_type == 'book':
+                    doc.shared_book_id = int(item_id)
+                elif item_type == 'paper':
+                    doc.shared_paper_id = int(item_id)
+                elif item_type == 'lecture':
+                    doc.shared_lecture_id = int(item_id)
+            except ValueError:
+                pass
+                
+        doc.save()
+        return JsonResponse({'success': True, 'doc_id': doc.id, 'title': doc.title})
+        
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+@login_required
+def group_messages(request, pk):
+    """AJAX handler for sending and polling group chat messages."""
+    group = get_object_or_404(StudyGroup, pk=pk)
+    if not GroupMembership.objects.filter(group=group, user=request.user).exists():
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+        
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        text = data.get('text', '').strip()
+        if text:
+            msg = GroupMessage.objects.create(
+                group=group,
+                sender=request.user,
+                text=text
+            )
+            return JsonResponse({
+                'success': True,
+                'id': msg.id,
+                'sender': msg.sender.username,
+                'text': msg.text,
+                'created_at': msg.created_at.strftime("%H:%M")
+            })
+            
+    elif request.method == 'GET':
+        last_id = request.GET.get('last_id', 0)
+        try:
+            last_id = int(last_id)
+        except ValueError:
+            last_id = 0
+            
+        new_msgs = GroupMessage.objects.filter(group=group, id__gt=last_id).order_by('created_at')
+        
+        messages_data = [{
+            'id': m.id,
+            'sender': m.sender.username,
+            'text': m.text,
+            'created_at': m.created_at.strftime("%H:%M")
+        } for m in new_msgs]
+        
+        return JsonResponse({
+            'messages': messages_data,
+            'last_id': new_msgs.last().id if new_msgs.exists() else last_id
+        })
+        
+    return JsonResponse({'error': 'Invalid method'}, status=405)
+
+@login_required
+def group_leave(request, pk):
+    """Leave or delete a group."""
+    group = get_object_or_404(StudyGroup, pk=pk)
+    membership = GroupMembership.objects.filter(group=group, user=request.user).first()
+    
+    if membership:
+        if membership.role == 'owner':
+            # If owner leaves, delete group for now to simplify
+            group.delete()
+            messages.success(request, f"Group '{group.name}' deleted.")
+        else:
+            membership.delete()
+            messages.success(request, f"You left '{group.name}'.")
+            
+    return redirect('collabo_home')

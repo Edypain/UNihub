@@ -35,6 +35,16 @@ urlpatterns = [
     # Fast Viewer
     path('viewer/<str:type>/<int:id>/', core_views.view_material, name='view_material'),
     
+    # Collabo
+    path('collabo/', core_views.collabo_home, name='collabo_home'),
+    path('collabo/create/', core_views.create_group, name='create_group'),
+    path('collabo/join/', core_views.join_group, name='join_group'),
+    path('collabo/<int:pk>/', core_views.group_detail, name='group_detail'),
+    path('collabo/<int:pk>/task/update/', core_views.group_task_update, name='group_task_update'),
+    path('collabo/<int:pk>/doc/add/', core_views.group_add_doc, name='group_add_doc'),
+    path('collabo/<int:pk>/messages/', core_views.group_messages, name='group_messages'),
+    path('collabo/<int:pk>/leave/', core_views.group_leave, name='group_leave'),
+    
     # Authentication
     path('login/', auth_views.LoginView.as_view(template_name='core/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(next_page='/'), name='logout'),

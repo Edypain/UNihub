@@ -1,0 +1,458 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div>
+        <h1 class="text-3xl font-bold font-display text-slate-800 dark:text-slate-100 flex items-center gap-2">
+            <span class="text-sky-500">🤝</span> {{ group.name }}
+        </h1>
+        <div class="flex items-center gap-3 mt-2">
+            <span class="text-xs font-bold text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/30 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                {% if group.department %}{{ group.department.code }}{% else %}General{% endif %}
+            </span>
+            <span class="text-sm text-slate-500 font-medium">Invite Code: <span class="font-mono font-bold text-slate-800 dark:text-slate-200 tracking-widest bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">{{ group.invite_code }}</span></span>
+        </div>
+    </div>
+    
+    <div class="flex items-center gap-3">
+        <form action="{% url 'group_leave' group.id %}" method="POST" onsubmit="return confirm('Are you sure you want to leave this group?');">
+            {% csrf_token %}
+            <button type="submit" class="bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold py-2 px-4 rounded-xl transition-colors shadow-sm text-sm border border-rose-100">
+                Leave Group
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="flex flex-col lg:flex-row gap-6">
+    <!-- Left Sidebar: Members -->
+    <div class="w-full lg:w-1/4">
+        <div class="glass-card rounded-2xl p-5 sticky top-24">
+            <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 mb-4 uppercase tracking-wider">Members ({{ memberships.count }})</h3>
+            <div class="space-y-3">
+                {% for membership in memberships %}
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-sky-400 to-indigo-500 flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                        {{ membership.user.username|make_list|first|upper }}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">{{ membership.user.username }}</p>
+                        <p class="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">{{ membership.role }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            {% if group.description %}
+            <hr class="my-5 border-slate-100 dark:border-slate-800">
+            <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 mb-2 uppercase tracking-wider">About</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400">{{ group.description }}</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Main Content: Tabs (Tasks, Docs, Chat) -->
+    <div class="w-full lg:w-3/4">
+        <div class="glass-card rounded-2xl overflow-hidden flex flex-col h-[700px]">
+            <!-- Tab Navigation -->
+            <div class="flex border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+                <button onclick="switchTab('tasks')" id="tab-btn-tasks" class="flex-1 py-4 text-sm font-bold border-b-2 border-sky-500 text-sky-600 dark:text-sky-400 transition-colors">📋 Tasks</button>
+                <button onclick="switchTab('docs')" id="tab-btn-docs" class="flex-1 py-4 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">📂 Documents</button>
+                <button onclick="switchTab('chat')" id="tab-btn-chat" class="flex-1 py-4 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">💬 Team Chat</button>
+            </div>
+            
+            <!-- Tab Content: Tasks -->
+            <div id="tab-tasks" class="flex-1 overflow-x-auto p-4 bg-slate-50 dark:bg-darkBg">
+                <div class="flex gap-4 h-full min-w-[700px]">
+                    <!-- To Do -->
+                    <div class="flex-1 bg-slate-100/50 dark:bg-slate-800/50 rounded-xl p-3 flex flex-col">
+                        <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">To Do</h3>
+                        <div class="flex-1 space-y-3 overflow-y-auto kanban-column" data-status="todo" ondragover="allowDrop(event)" ondrop="drop(event)">
+                            {% for task in tasks %}{% if task.status == 'todo' %}
+                            <div class="bg-white dark:bg-darkCard p-3 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 cursor-move" draggable="true" ondragstart="drag(event)" id="task-{{ task.id }}">
+                                <p class="text-sm font-medium text-slate-800 dark:text-slate-200">{{ task.title }}</p>
+                            </div>
+                            {% endif %}{% endfor %}
+                        </div>
+                        <button onclick="openTaskModal()" class="mt-3 text-xs font-bold text-slate-500 hover:text-sky-500 p-2 text-left hover:bg-white dark:hover:bg-darkCard rounded-lg transition-colors">+ Add Task</button>
+                    </div>
+                    <!-- In Progress -->
+                    <div class="flex-1 bg-slate-100/50 dark:bg-slate-800/50 rounded-xl p-3 flex flex-col">
+                        <h3 class="text-xs font-bold text-sky-500 uppercase tracking-wider mb-3">In Progress</h3>
+                        <div class="flex-1 space-y-3 overflow-y-auto kanban-column" data-status="inprogress" ondragover="allowDrop(event)" ondrop="drop(event)">
+                            {% for task in tasks %}{% if task.status == 'inprogress' %}
+                            <div class="bg-white dark:bg-darkCard p-3 rounded-lg shadow-sm border border-sky-200 dark:border-sky-900 cursor-move" draggable="true" ondragstart="drag(event)" id="task-{{ task.id }}">
+                                <p class="text-sm font-medium text-slate-800 dark:text-slate-200">{{ task.title }}</p>
+                            </div>
+                            {% endif %}{% endfor %}
+                        </div>
+                    </div>
+                    <!-- Done -->
+                    <div class="flex-1 bg-slate-100/50 dark:bg-slate-800/50 rounded-xl p-3 flex flex-col">
+                        <h3 class="text-xs font-bold text-emerald-500 uppercase tracking-wider mb-3">Done</h3>
+                        <div class="flex-1 space-y-3 overflow-y-auto kanban-column" data-status="done" ondragover="allowDrop(event)" ondrop="drop(event)">
+                            {% for task in tasks %}{% if task.status == 'done' %}
+                            <div class="bg-white dark:bg-darkCard p-3 rounded-lg shadow-sm border border-emerald-200 dark:border-emerald-900 opacity-60 cursor-move" draggable="true" ondragstart="drag(event)" id="task-{{ task.id }}">
+                                <p class="text-sm font-medium text-slate-800 dark:text-slate-200 line-through">{{ task.title }}</p>
+                            </div>
+                            {% endif %}{% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tab Content: Documents -->
+            <div id="tab-docs" class="hidden flex-1 overflow-y-auto p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">Group Documents</h3>
+                    <button onclick="document.getElementById('doc-modal').classList.remove('hidden')" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg text-sm transition-colors">
+                        + Add Document
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="docs-list">
+                    {% for doc in documents %}
+                    <div class="border border-slate-200 dark:border-slate-700 rounded-xl p-4 flex gap-3 bg-white dark:bg-darkCard items-start">
+                        <div class="text-3xl shrink-0">
+                            {% if doc.shared_book %}📚{% elif doc.shared_paper %}📄{% elif doc.shared_lecture %}🖥️{% else %}🔗{% endif %}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h4 class="font-bold text-sm text-slate-800 dark:text-slate-200 truncate">{{ doc.title }}</h4>
+                            <p class="text-xs text-slate-500 mb-2">Added by {{ doc.added_by.username }}</p>
+                            
+                            {% if doc.shared_book %}
+                                <a href="{% url 'view_material' 'book' doc.shared_book.id %}" class="text-xs font-bold text-sky-500 hover:underline">View Book</a>
+                            {% elif doc.shared_paper %}
+                                <a href="{% url 'view_material' 'paper' doc.shared_paper.id %}" class="text-xs font-bold text-emerald-500 hover:underline">View Paper</a>
+                            {% elif doc.shared_lecture %}
+                                <a href="{% url 'view_material' 'lecture' doc.shared_lecture.id %}" class="text-xs font-bold text-indigo-500 hover:underline">View Slide</a>
+                            {% elif doc.url %}
+                                <a href="{{ doc.url }}" target="_blank" class="text-xs font-bold text-slate-600 hover:underline">Visit Link</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-span-full text-center py-10" id="no-docs">
+                        <div class="text-4xl mb-2">📂</div>
+                        <p class="text-slate-500 font-semibold text-sm">No documents shared yet.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Tab Content: Chat -->
+            <div id="tab-chat" class="hidden flex-1 flex flex-col bg-white dark:bg-darkCard">
+                <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4">
+                    <!-- Messages populated via JS polling -->
+                    <div class="text-center py-10 text-slate-400 text-sm italic">Loading messages...</div>
+                </div>
+                <div class="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+                    <form id="chat-form" onsubmit="sendGroupMessage(event)" class="flex gap-2">
+                        <input type="text" id="chat-input" placeholder="Type a message..." class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-darkCard focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm">
+                        <button type="submit" class="bg-sky-500 hover:bg-sky-600 text-white p-2.5 rounded-xl transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Add Task Modal -->
+<div id="task-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+    <div class="bg-white dark:bg-darkCard rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+            <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 font-display">Add New Task</h3>
+            <button onclick="document.getElementById('task-modal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        <form onsubmit="addTask(event)" class="p-6">
+            <div>
+                <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Task Title</label>
+                <input type="text" id="task-title" required class="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500">
+            </div>
+            <div class="mt-6">
+                <button type="submit" class="w-full bg-sky-500 text-white font-bold py-2.5 rounded-xl transition-colors">Add Task</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add Doc Modal -->
+<div id="doc-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+    <div class="bg-white dark:bg-darkCard rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+            <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 font-display">Add Document</h3>
+            <button onclick="document.getElementById('doc-modal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        <form onsubmit="addDoc(event)" class="p-6 space-y-4">
+            <div>
+                <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Title</label>
+                <input type="text" id="doc-title" required class="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
+            </div>
+            
+            <div class="border-t border-slate-100 dark:border-slate-800 pt-4">
+                <p class="text-xs font-bold text-slate-500 uppercase mb-2">Option A: Link to UniHub Material</p>
+                <div class="flex gap-2">
+                    <select id="doc-type" class="w-1/3 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm" onchange="toggleDocInputs()">
+                        <option value="">None</option>
+                        <option value="book">Book</option>
+                        <option value="paper">Paper</option>
+                        <option value="lecture">Slide</option>
+                    </select>
+                    <select id="doc-id" class="w-2/3 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm hidden">
+                        <!-- Populated by JS based on selection -->
+                    </select>
+                </div>
+            </div>
+            
+            <div class="border-t border-slate-100 dark:border-slate-800 pt-4">
+                <p class="text-xs font-bold text-slate-500 uppercase mb-2">Option B: External URL</p>
+                <input type="url" id="doc-url" placeholder="https://..." class="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm">
+            </div>
+            
+            <div class="mt-6">
+                <button type="submit" class="w-full bg-indigo-500 text-white font-bold py-2.5 rounded-xl transition-colors">Add to Group</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const groupId = '{{ group.id }}';
+    const currentUsername = '{{ request.user.username }}';
+    
+    // Hidden data for doc dropdowns
+    const books = [{% for b in books %}{id: '{{ b.id }}', title: '{{ b.title|escapejs }}'},{% endfor %}];
+    const papers = [{% for p in papers %}{id: '{{ p.id }}', title: '{{ p.title|escapejs }}'},{% endfor %}];
+    const lectures = [{% for l in lectures %}{id: '{{ l.id }}', title: '{{ l.title|escapejs }}'},{% endfor %}];
+
+    // -- Tab Switching --
+    function switchTab(tabId) {
+        document.getElementById('tab-tasks').classList.add('hidden');
+        document.getElementById('tab-docs').classList.add('hidden');
+        document.getElementById('tab-chat').classList.add('hidden');
+        
+        document.getElementById('tab-btn-tasks').className = 'flex-1 py-4 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors';
+        document.getElementById('tab-btn-docs').className = 'flex-1 py-4 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors';
+        document.getElementById('tab-btn-chat').className = 'flex-1 py-4 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors';
+        
+        document.getElementById('tab-' + tabId).classList.remove('hidden');
+        document.getElementById('tab-btn-' + tabId).className = 'flex-1 py-4 text-sm font-bold border-b-2 border-sky-500 text-sky-600 dark:text-sky-400 transition-colors';
+    }
+
+    // -- Kanban Drag & Drop --
+    function allowDrop(ev) {
+        ev.preventDefault();
+        ev.currentTarget.classList.add('bg-slate-200/50', 'dark:bg-slate-700/50');
+    }
+    
+    function drag(ev) {
+        ev.dataTransfer.setData("text", ev.target.id);
+    }
+    
+    function drop(ev) {
+        ev.preventDefault();
+        const col = ev.currentTarget;
+        col.classList.remove('bg-slate-200/50', 'dark:bg-slate-700/50');
+        
+        const data = ev.dataTransfer.getData("text");
+        const el = document.getElementById(data);
+        if (!el) return;
+        
+        col.appendChild(el);
+        const newStatus = col.getAttribute('data-status');
+        
+        // Update styling
+        el.className = 'p-3 rounded-lg shadow-sm cursor-move bg-white dark:bg-darkCard border ';
+        if (newStatus === 'todo') el.classList.add('border-slate-200', 'dark:border-slate-700');
+        if (newStatus === 'inprogress') el.classList.add('border-sky-200', 'dark:border-sky-900');
+        if (newStatus === 'done') {
+            el.classList.add('border-emerald-200', 'dark:border-emerald-900', 'opacity-60');
+            el.querySelector('p').classList.add('line-through');
+        } else {
+            el.querySelector('p').classList.remove('line-through');
+        }
+        
+        // AJAX update
+        const taskId = data.replace('task-', '');
+        fetch(`/collabo/${groupId}/task/update/`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ task_id: taskId, status: newStatus })
+        });
+    }
+
+    // -- Add Task --
+    function openTaskModal() {
+        document.getElementById('task-modal').classList.remove('hidden');
+        document.getElementById('task-title').focus();
+    }
+    
+    async function addTask(ev) {
+        ev.preventDefault();
+        const title = document.getElementById('task-title').value;
+        const formData = new FormData();
+        formData.append('title', title);
+        
+        const res = await fetch(`/collabo/${groupId}/task/update/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+            body: formData
+        });
+        const data = await res.json();
+        if (data.success) {
+            const html = `<div class="bg-white dark:bg-darkCard p-3 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 cursor-move" draggable="true" ondragstart="drag(event)" id="task-${data.task_id}">
+                            <p class="text-sm font-medium text-slate-800 dark:text-slate-200">${data.title}</p>
+                          </div>`;
+            document.querySelector('[data-status="todo"]').insertAdjacentHTML('beforeend', html);
+            document.getElementById('task-modal').classList.add('hidden');
+            document.getElementById('task-title').value = '';
+        }
+    }
+
+    // -- Add Document --
+    function toggleDocInputs() {
+        const type = document.getElementById('doc-type').value;
+        const idSelect = document.getElementById('doc-id');
+        const urlInput = document.getElementById('doc-url');
+        
+        if (type) {
+            idSelect.classList.remove('hidden');
+            urlInput.disabled = true;
+            urlInput.value = '';
+            
+            idSelect.innerHTML = '';
+            let items = [];
+            if (type === 'book') items = books;
+            if (type === 'paper') items = papers;
+            if (type === 'lecture') items = lectures;
+            
+            items.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item.id;
+                opt.textContent = item.title;
+                idSelect.appendChild(opt);
+            });
+            
+            if (items.length > 0) {
+                // Auto-fill title
+                document.getElementById('doc-title').value = items[0].title;
+            }
+        } else {
+            idSelect.classList.add('hidden');
+            urlInput.disabled = false;
+        }
+    }
+    
+    document.getElementById('doc-id').addEventListener('change', (e) => {
+        document.getElementById('doc-title').value = e.target.options[e.target.selectedIndex].text;
+    });
+
+    async function addDoc(ev) {
+        ev.preventDefault();
+        const title = document.getElementById('doc-title').value;
+        const url = document.getElementById('doc-url').value;
+        const type = document.getElementById('doc-type').value;
+        const itemId = document.getElementById('doc-id').value;
+        
+        const formData = new FormData();
+        formData.append('title', title);
+        if (url) formData.append('url', url);
+        if (type) {
+            formData.append('item_type', type);
+            formData.append('item_id', itemId);
+        }
+        
+        const res = await fetch(`/collabo/${groupId}/doc/add/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+            body: formData
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+            window.location.reload(); // Simple reload to show new doc for now
+        }
+    }
+
+    // -- Chat Polling --
+    let lastMsgId = 0;
+    const chatContainer = document.getElementById('chat-messages');
+    let isPolling = false;
+
+    async function pollChat() {
+        if (isPolling) return;
+        isPolling = true;
+        try {
+            const res = await fetch(`/collabo/${groupId}/messages/?last_id=${lastMsgId}`);
+            const data = await res.json();
+            
+            if (data.messages && data.messages.length > 0) {
+                if (lastMsgId === 0) chatContainer.innerHTML = ''; // clear loading
+                
+                let html = '';
+                data.messages.forEach(m => {
+                    const isMe = m.sender === currentUsername;
+                    html += `
+                        <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
+                            <span class="text-[10px] font-bold text-slate-400 ml-1 mb-1">${m.sender} • ${m.created_at}</span>
+                            <div class="max-w-[80%] rounded-2xl px-4 py-2 text-sm ${isMe ? 'bg-sky-500 text-white rounded-br-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-bl-sm'}">
+                                ${m.text}
+                            </div>
+                        </div>
+                    `;
+                });
+                chatContainer.insertAdjacentHTML('beforeend', html);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                lastMsgId = data.last_id;
+            } else if (lastMsgId === 0) {
+                chatContainer.innerHTML = '<div class="text-center py-10 text-slate-400 text-sm">No messages yet. Say hi!</div>';
+            }
+        } catch (e) {
+            console.error(e);
+        }
+        isPolling = false;
+    }
+    
+    async function sendGroupMessage(ev) {
+        ev.preventDefault();
+        const input = document.getElementById('chat-input');
+        const text = input.value;
+        if (!text.trim()) return;
+        
+        input.value = '';
+        await fetch(`/collabo/${groupId}/messages/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ text: text })
+        });
+        
+        pollChat(); // Immediate poll to show msg
+    }
+
+    // Start polling if chat is opened, or just poll in background slowly
+    setInterval(pollChat, 4000);
+    pollChat();
+    
+    // Stop drop handlers from firing randomly on grid
+    document.querySelectorAll('.kanban-column').forEach(el => {
+        el.addEventListener('dragleave', e => {
+            e.currentTarget.classList.remove('bg-slate-200/50', 'dark:bg-slate-700/50');
+        });
+    });
+</script>
+{% endblock %}

@@ -116,3 +116,49 @@
     </div>
 </div>
 {% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+    const searchInput = document.querySelector('input[name="q"]');
+    const tbody       = document.querySelector('tbody');
+    const countBadge  = document.querySelector('p.text-xs.text-slate-400.mb-5');
+
+    if (!searchInput || !tbody) return;
+
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+
+    let noRow = document.getElementById('live-no-results-papers');
+    if (!noRow) {
+        noRow = document.createElement('tr');
+        noRow.id = 'live-no-results-papers';
+        noRow.className = 'hidden';
+        noRow.innerHTML = `<td colspan="7" class="py-10 text-center">
+            <div class="text-4xl mb-2">🔍</div>
+            <p class="text-slate-500 dark:text-slate-400 font-semibold">No papers match your search.</p>
+        </td>`;
+        tbody.appendChild(noRow);
+    }
+
+    function filterRows() {
+        const q = searchInput.value.toLowerCase().trim();
+        let visible = 0;
+        rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            const show = !q || text.includes(q);
+            row.style.display = show ? '' : 'none';
+            if (show) visible++;
+        });
+        noRow.classList.toggle('hidden', visible > 0);
+        if (countBadge) {
+            countBadge.textContent = `${visible} paper${visible !== 1 ? 's' : ''} found${q ? ` for "${searchInput.value}"` : ''}`;
+        }
+    }
+
+    searchInput.addEventListener('input', filterRows);
+    searchInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && searchInput.value.trim()) { e.preventDefault(); filterRows(); }
+    });
+})();
+</script>
+{% endblock %}

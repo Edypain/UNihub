@@ -19,9 +19,9 @@
             <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
             <span class="text-white text-xs font-semibold tracking-wide uppercase">Your Academic Hub</span>
         </div>
-        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white mb-4 font-display leading-tight" style="animation: fadeSlideIn 0.8s ease-out both;">
-            Study Smarter,<br>
-            <span class="bg-gradient-to-r from-sky-300 to-indigo-300 bg-clip-text text-transparent">Excel Further</span>
+        <h1 id="hero-heading" class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white mb-4 font-display leading-tight" style="animation: fadeSlideIn 0.8s ease-out both;">
+            <span id="typewriter-line1">Study Smarter,</span><br>
+            <span class="bg-gradient-to-r from-sky-300 to-indigo-300 bg-clip-text text-transparent" id="typewriter-line2"></span>
         </h1>
         <p class="text-slate-300 text-lg md:text-xl mb-8 max-w-2xl" style="animation: fadeSlideIn 1s ease-out both;">
             Access textbooks, past papers, and an AI-powered academic tutor — all tailored to your department.
@@ -52,19 +52,18 @@
     {% with book_count=recent_books|length paper_count=recent_papers|length lecture_count=lecture_count %}
     <div class="glass-card rounded-2xl p-5 text-center shadow-sm hover:shadow-md transition-all group">
         <div class="text-3xl font-extrabold font-display text-sky-500 group-hover:scale-110 transition-transform">📚</div>
-        <div class="text-2xl font-bold mt-1 text-slate-800 dark:text-slate-100">Books</div>
-        <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">Available Resources</div>
+        <div class="text-2xl font-bold mt-1 text-slate-800 dark:text-slate-100" data-count="{{ recent_books|length }}">0</div>
+        <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">Available Books</div>
     </div>
     <div class="glass-card rounded-2xl p-5 text-center shadow-sm hover:shadow-md transition-all group">
         <div class="text-3xl font-extrabold font-display text-emerald-500 group-hover:scale-110 transition-transform">📄</div>
-        <div class="text-2xl font-bold mt-1 text-slate-800 dark:text-slate-100">Papers</div>
-        <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">Past Examinations</div>
+        <div class="text-2xl font-bold mt-1 text-slate-800 dark:text-slate-100" data-count="{{ recent_papers|length }}">0</div>
+        <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">Past Papers</div>
     </div>
     <div class="glass-card rounded-2xl p-5 text-center shadow-sm hover:shadow-md transition-all group">
         <div class="text-3xl font-extrabold font-display text-sky-500 group-hover:scale-110 transition-transform">🖥️</div>
-        <div class="text-2xl font-bold mt-1 text-slate-800 dark:text-slate-100">Lecture Slides</div>
-        <div class="text-4xl font-extrabold text-slate-900 dark:text-white mt-2">{{ lecture_count }}</div>
-        <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">Newest classroom slides</div>
+        <div class="text-2xl font-bold mt-1 text-slate-800 dark:text-slate-100" data-count="{{ lecture_count }}">0</div>
+        <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">Lecture Slides</div>
     </div>
     {% endwith %}
     <div class="glass-card rounded-2xl p-5 text-center shadow-sm hover:shadow-md transition-all group">
@@ -296,5 +295,50 @@
         from { opacity: 0; transform: translateY(24px); }
         to { opacity: 1; transform: translateY(0); }
     }
+    /* blinking cursor for typewriter */
+    .typewriter-cursor::after {
+        content: '|';
+        animation: blink-cursor 0.75s step-end infinite;
+        margin-left: 1px;
+        color: #7dd3fc; /* sky-300 */
+    }
+    @keyframes blink-cursor {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; }
+    }
 </style>
+<script>
+    (function () {
+        // Typewriter — only animate line 2 so the heading structure is stable
+        const target = document.getElementById('typewriter-line2');
+        if (!target) return;
+        const phrases = ['Excel Further', 'Ace Your Exams', 'Learn Together', 'Share Knowledge'];
+        let phraseIdx = 0, charIdx = 0, deleting = false;
+
+        function type() {
+            const current = phrases[phraseIdx];
+            if (!deleting) {
+                target.textContent = current.slice(0, charIdx + 1);
+                charIdx++;
+                if (charIdx === current.length) {
+                    // pause before delete
+                    target.classList.add('typewriter-cursor');
+                    setTimeout(() => { deleting = true; target.classList.remove('typewriter-cursor'); requestAnimationFrame(loop); }, 2000);
+                    return;
+                }
+            } else {
+                target.textContent = current.slice(0, charIdx - 1);
+                charIdx--;
+                if (charIdx === 0) {
+                    deleting = false;
+                    phraseIdx = (phraseIdx + 1) % phrases.length;
+                }
+            }
+            setTimeout(() => requestAnimationFrame(loop), deleting ? 45 : 80);
+        }
+        function loop() { type(); }
+        // Start after hero animation
+        setTimeout(loop, 900);
+    })();
+</script>
 {% endblock %}
