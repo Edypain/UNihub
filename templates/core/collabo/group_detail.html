@@ -69,8 +69,11 @@
                         <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">To Do</h3>
                         <div class="flex-1 space-y-3 overflow-y-auto kanban-column" data-status="todo" ondragover="allowDrop(event)" ondrop="drop(event)">
                             {% for task in tasks %}{% if task.status == 'todo' %}
-                            <div class="bg-white dark:bg-darkCard p-3 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 cursor-move" draggable="true" ondragstart="drag(event)" id="task-{{ task.id }}">
-                                <p class="text-sm font-medium text-slate-800 dark:text-slate-200">{{ task.title }}</p>
+                            <div class="bg-white dark:bg-darkCard p-3 rounded-lg shadow-sm hover:shadow-md border border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-700 cursor-move transition-all duration-200 transform hover:-translate-y-0.5" draggable="true" ondragstart="drag(event)" id="task-{{ task.id }}">
+                                <div class="flex justify-between items-start mb-2">
+                                    <span class="text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded uppercase">Task</span>
+                                </div>
+                                <p class="text-sm font-semibold text-slate-800 dark:text-slate-200">{{ task.title }}</p>
                             </div>
                             {% endif %}{% endfor %}
                         </div>
@@ -81,8 +84,11 @@
                         <h3 class="text-xs font-bold text-sky-500 uppercase tracking-wider mb-3">In Progress</h3>
                         <div class="flex-1 space-y-3 overflow-y-auto kanban-column" data-status="inprogress" ondragover="allowDrop(event)" ondrop="drop(event)">
                             {% for task in tasks %}{% if task.status == 'inprogress' %}
-                            <div class="bg-white dark:bg-darkCard p-3 rounded-lg shadow-sm border border-sky-200 dark:border-sky-900 cursor-move" draggable="true" ondragstart="drag(event)" id="task-{{ task.id }}">
-                                <p class="text-sm font-medium text-slate-800 dark:text-slate-200">{{ task.title }}</p>
+                            <div class="bg-white dark:bg-darkCard p-3 rounded-lg shadow-sm hover:shadow-md border border-sky-300 dark:border-sky-800 hover:border-sky-400 dark:hover:border-sky-600 cursor-move transition-all duration-200 transform hover:-translate-y-0.5" draggable="true" ondragstart="drag(event)" id="task-{{ task.id }}">
+                                <div class="flex justify-between items-start mb-2">
+                                    <span class="text-[10px] font-bold text-sky-500 bg-sky-50 dark:bg-sky-900/30 px-2 py-0.5 rounded uppercase">Doing</span>
+                                </div>
+                                <p class="text-sm font-semibold text-slate-800 dark:text-slate-200">{{ task.title }}</p>
                             </div>
                             {% endif %}{% endfor %}
                         </div>
@@ -92,8 +98,11 @@
                         <h3 class="text-xs font-bold text-emerald-500 uppercase tracking-wider mb-3">Done</h3>
                         <div class="flex-1 space-y-3 overflow-y-auto kanban-column" data-status="done" ondragover="allowDrop(event)" ondrop="drop(event)">
                             {% for task in tasks %}{% if task.status == 'done' %}
-                            <div class="bg-white dark:bg-darkCard p-3 rounded-lg shadow-sm border border-emerald-200 dark:border-emerald-900 opacity-60 cursor-move" draggable="true" ondragstart="drag(event)" id="task-{{ task.id }}">
-                                <p class="text-sm font-medium text-slate-800 dark:text-slate-200 line-through">{{ task.title }}</p>
+                            <div class="bg-slate-50 dark:bg-darkCard/80 p-3 rounded-lg shadow-sm border border-emerald-200 dark:border-emerald-900/50 opacity-75 hover:opacity-100 cursor-move transition-all duration-200" draggable="true" ondragstart="drag(event)" id="task-{{ task.id }}">
+                                <div class="flex justify-between items-start mb-2">
+                                    <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded uppercase">Done</span>
+                                </div>
+                                <p class="text-sm font-semibold text-slate-500 dark:text-slate-400 line-through">{{ task.title }}</p>
                             </div>
                             {% endif %}{% endfor %}
                         </div>
@@ -112,22 +121,22 @@
                 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="docs-list">
                     {% for doc in documents %}
-                    <div class="border border-slate-200 dark:border-slate-700 rounded-xl p-4 flex gap-3 bg-white dark:bg-darkCard items-start">
-                        <div class="text-3xl shrink-0">
+                    <div class="border border-slate-200 dark:border-slate-700 rounded-xl p-4 flex gap-3 bg-white dark:bg-darkCard items-start group hover:shadow-lg hover:border-sky-300 dark:hover:border-sky-700 transition-all duration-300 transform hover:-translate-y-1">
+                        <div class="text-3xl shrink-0 group-hover:scale-110 transition-transform duration-300">
                             {% if doc.shared_book %}📚{% elif doc.shared_paper %}📄{% elif doc.shared_lecture %}🖥️{% else %}🔗{% endif %}
                         </div>
                         <div class="flex-1 min-w-0">
-                            <h4 class="font-bold text-sm text-slate-800 dark:text-slate-200 truncate">{{ doc.title }}</h4>
-                            <p class="text-xs text-slate-500 mb-2">Added by {{ doc.added_by.username }}</p>
+                            <h4 class="font-bold text-sm text-slate-800 dark:text-slate-200 truncate group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">{{ doc.title }}</h4>
+                            <p class="text-[11px] text-slate-500 mb-2 font-medium uppercase tracking-wide">Added by {{ doc.added_by.username }}</p>
                             
                             {% if doc.shared_book %}
-                                <a href="{% url 'view_material' 'book' doc.shared_book.id %}" class="text-xs font-bold text-sky-500 hover:underline">View Book</a>
+                                <a href="{% url 'view_material' 'book' doc.shared_book.id %}" class="inline-flex items-center gap-1 text-xs font-bold text-sky-500 bg-sky-50 dark:bg-sky-900/30 px-2 py-1 rounded-md hover:bg-sky-100 dark:hover:bg-sky-900/50 transition-colors"><span>View Book</span><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>
                             {% elif doc.shared_paper %}
-                                <a href="{% url 'view_material' 'paper' doc.shared_paper.id %}" class="text-xs font-bold text-emerald-500 hover:underline">View Paper</a>
+                                <a href="{% url 'view_material' 'paper' doc.shared_paper.id %}" class="inline-flex items-center gap-1 text-xs font-bold text-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-1 rounded-md hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors"><span>View Paper</span><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>
                             {% elif doc.shared_lecture %}
-                                <a href="{% url 'view_material' 'lecture' doc.shared_lecture.id %}" class="text-xs font-bold text-indigo-500 hover:underline">View Slide</a>
+                                <a href="{% url 'view_material' 'lecture' doc.shared_lecture.id %}" class="inline-flex items-center gap-1 text-xs font-bold text-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 rounded-md hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors"><span>View Slide</span><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>
                             {% elif doc.url %}
-                                <a href="{{ doc.url }}" target="_blank" class="text-xs font-bold text-slate-600 hover:underline">Visit Link</a>
+                                <a href="{{ doc.url }}" target="_blank" class="inline-flex items-center gap-1 text-xs font-bold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"><span>Visit Link</span><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>
                             {% endif %}
                         </div>
                     </div>
