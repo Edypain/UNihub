@@ -2,40 +2,53 @@
 
 {% block content %}
 <div class="min-h-screen flex items-center justify-center px-4 py-12">
-    <div class="w-full max-w-2xl bg-white dark:bg-darkCard rounded-2xl shadow-xl p-8">
-        <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-4">Upload Lecture Slide</h1>
+    <div class="w-full max-w-xl bg-white dark:bg-darkCard rounded-3xl shadow-xl overflow-hidden p-8">
+        <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">Upload Lecture Slide</h1>
+        <p class="text-sm text-slate-500 mb-6">Drag and drop your PDF or PowerPoint below. The title will be filled from the filename.</p>
 
-        <form method="post" enctype="multipart/form-data" class="space-y-4">
+        <form method="post" enctype="multipart/form-data" class="space-y-4" id="uploadForm">
             {% csrf_token %}
 
+            <!-- Drag & Drop Zone -->
+            <div id="dropzone" class="border-2 border-dashed border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl p-10 text-center hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-all duration-300 cursor-pointer relative group">
+                <input type="file" name="{{ form.slide_file.name }}" id="{{ form.slide_file.id_for_label }}" accept=".pdf,.ppt,.pptx,.key" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" required>
+                <div class="text-5xl mb-3 pointer-events-none group-hover:scale-110 transition-transform duration-300" id="dropzoneIcon">🖥️</div>
+                <h3 class="text-lg font-bold text-indigo-700 dark:text-indigo-400 pointer-events-none" id="dropzoneText">Click or Drag File here</h3>
+                <p class="text-sm text-indigo-600/70 dark:text-indigo-400/70 mt-1 pointer-events-none" id="dropzoneSubtext">PDF, PPT, PPTX — up to 100MB</p>
+                {% if form.slide_file.errors %}<p class="text-red-600 text-sm mt-2 font-bold">{{ form.slide_file.errors.0 }}</p>{% endif %}
+            </div>
+
+            <!-- Title Field (Always visible) -->
             <div>
-                <label for="{{ form.title.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Title</label>
-                <input type="text" name="{{ form.title.name }}" id="{{ form.title.id_for_label }}" value="{{ form.title.value|default:'' }}" class="mt-2 w-full rounded-xl border border-slate-200 dark:border-darkBorder px-4 py-2 bg-white dark:bg-darkBg text-sm">
+                <label for="{{ form.title.id_for_label }}" class="block text-sm font-bold text-slate-700 dark:text-slate-200">Title</label>
+                <input type="text" name="{{ form.title.name }}" id="{{ form.title.id_for_label }}" value="{{ form.title.value|default:'' }}" class="mt-2 w-full rounded-xl border border-slate-200 dark:border-darkBorder px-4 py-3 bg-slate-50 dark:bg-slate-800 text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none transition-all" placeholder="Lecture title" required>
                 {% if form.title.errors %}<p class="text-red-600 text-sm mt-1">{{ form.title.errors.0 }}</p>{% endif %}
             </div>
 
-            <div>
-                <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Description (optional)</label>
-                <textarea name="{{ form.description.name }}" id="{{ form.description.id_for_label }}" rows="3" class="mt-2 w-full rounded-xl border border-slate-200 dark:border-darkBorder px-4 py-2 bg-white dark:bg-darkBg text-sm">{{ form.description.value|default:'' }}</textarea>
-                {% if form.description.errors %}<p class="text-red-600 text-sm mt-1">{{ form.description.errors.0 }}</p>{% endif %}
+            <!-- Advanced / Optional Fields Toggle -->
+            <button type="button" onclick="document.getElementById('advancedFields').classList.toggle('hidden')" class="text-sm font-bold text-slate-500 hover:text-indigo-500 flex items-center gap-1 transition-colors mt-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                Advanced Options
+            </button>
+
+            <div id="advancedFields" class="hidden space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <!-- Course Code -->
+                <div>
+                    <label for="{{ form.course_code.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Course Code</label>
+                    <input type="text" name="{{ form.course_code.name }}" id="{{ form.course_code.id_for_label }}" value="{{ form.course_code.value|default:'' }}" class="mt-2 w-full rounded-xl border border-slate-200 dark:border-darkBorder px-4 py-2 bg-white dark:bg-darkBg text-sm" placeholder="e.g. PHY111">
+                    {% if form.course_code.errors %}<p class="text-red-600 text-sm mt-1">{{ form.course_code.errors.0 }}</p>{% endif %}
+                </div>
+                <!-- Description -->
+                <div>
+                    <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Description (optional)</label>
+                    <textarea name="{{ form.description.name }}" id="{{ form.description.id_for_label }}" rows="2" class="mt-2 w-full rounded-xl border border-slate-200 dark:border-darkBorder px-4 py-2 bg-white dark:bg-darkBg text-sm">{{ form.description.value|default:'' }}</textarea>
+                    {% if form.description.errors %}<p class="text-red-600 text-sm mt-1">{{ form.description.errors.0 }}</p>{% endif %}
+                </div>
             </div>
 
-            <div>
-                <label for="{{ form.course_code.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Course code</label>
-                <input type="text" name="{{ form.course_code.name }}" id="{{ form.course_code.id_for_label }}" value="{{ form.course_code.value|default:'' }}" class="mt-2 w-full rounded-xl border border-slate-200 dark:border-darkBorder px-4 py-2 bg-white dark:bg-darkBg text-sm" placeholder="e.g., PHY111">
-                {% if form.course_code.errors %}<p class="text-red-600 text-sm mt-1">{{ form.course_code.errors.0 }}</p>{% endif %}
-            </div>
-
-            <div>
-                <label for="{{ form.slide_file.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Slide file</label>
-                <input type="file" name="{{ form.slide_file.name }}" id="{{ form.slide_file.id_for_label }}" class="mt-2 w-full text-sm" required>
-                <p id="slideName" class="text-xs text-slate-500 mt-1"></p>
-                {% if form.slide_file.errors %}<p class="text-red-600 text-sm mt-1">{{ form.slide_file.errors.0 }}</p>{% endif %}
-            </div>
-
-            <div class="flex items-center gap-3">
-                <button type="submit" class="inline-flex items-center justify-center rounded-2xl bg-sky-600 px-5 py-3 text-sm font-semibold text-white shadow hover:bg-sky-700">Upload Slide</button>
-                <a href="{% url 'lecture_list' %}" class="text-sm text-slate-500 hover:underline">Cancel</a>
+            <div class="pt-6 flex items-center gap-3">
+                <button type="submit" class="flex-1 inline-flex items-center justify-center rounded-xl bg-indigo-500 px-5 py-3.5 text-sm font-bold text-white shadow-md hover:bg-indigo-600 transition-all transform hover:-translate-y-0.5">Upload Slide</button>
+                <a href="{% url 'lecture_list' %}" class="px-5 py-3.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">Cancel</a>
             </div>
         </form>
     </div>
@@ -43,10 +56,50 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function(){
-    const slideInput = document.getElementById('{{ form.slide_file.id_for_label }}');
-    const slideName = document.getElementById('slideName');
-    if(slideInput){ slideInput.addEventListener('change', e => { const f=e.target.files[0]; slideName.textContent = f ? f.name : ''; }); }
+    const fileInput = document.getElementById('{{ form.slide_file.id_for_label }}');
+    const titleInput = document.getElementById('{{ form.title.id_for_label }}');
+    const dropzoneText = document.getElementById('dropzoneText');
+    const dropzoneSubtext = document.getElementById('dropzoneSubtext');
+    const dropzoneIcon = document.getElementById('dropzoneIcon');
+    const dropzone = document.getElementById('dropzone');
+
+    const iconMap = { 'pdf': '📄', 'ppt': '📊', 'pptx': '📊', 'key': '🎬' };
+
+    function handleFile(file) {
+        if(file) {
+            const ext = file.name.split('.').pop().toLowerCase();
+            dropzoneIcon.textContent = iconMap[ext] || '🖥️';
+            dropzoneText.textContent = file.name;
+            dropzoneSubtext.textContent = (file.size / (1024*1024)).toFixed(2) + ' MB';
+            dropzone.classList.add('border-solid', 'border-indigo-500');
+            dropzone.classList.remove('border-dashed');
+
+            // Auto-fill title if empty
+            if(titleInput.value.trim() === '') {
+                let name = file.name.replace(/\.[^/.]+$/, '');
+                name = name.replace(/[-_]/g, ' ');
+                // Capitalize first letter
+                titleInput.value = name.charAt(0).toUpperCase() + name.slice(1);
+            }
+        }
+    }
+
+    fileInput.addEventListener('change', e => { handleFile(e.target.files[0]); });
+
+    // Drag and drop
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(ev => {
+        dropzone.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); }, false);
+    });
+    ['dragenter', 'dragover'].forEach(ev => {
+        dropzone.addEventListener(ev, () => dropzone.classList.add('scale-[1.02]', 'bg-indigo-100'), false);
+    });
+    ['dragleave', 'drop'].forEach(ev => {
+        dropzone.addEventListener(ev, () => dropzone.classList.remove('scale-[1.02]', 'bg-indigo-100'), false);
+    });
+    dropzone.addEventListener('drop', function(e) {
+        const files = e.dataTransfer.files;
+        if(files.length) { fileInput.files = files; handleFile(files[0]); }
+    }, false);
 });
 </script>
-
 {% endblock %}

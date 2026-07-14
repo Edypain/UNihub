@@ -2,105 +2,121 @@
 
 {% block content %}
 <div class="min-h-screen flex items-center justify-center px-4 py-12">
-    <div class="w-full max-w-3xl bg-white dark:bg-darkCard rounded-3xl shadow-xl overflow-hidden">
-        <div class="grid md:grid-cols-2 gap-6">
-            <div class="hidden md:flex flex-col items-center justify-center p-8 bg-gradient-to-b from-sky-500 to-indigo-600 text-white">
-                <div class="text-5xl">📚</div>
-                <h2 class="mt-4 text-2xl font-bold">Share your book</h2>
-                <p class="mt-2 text-sm text-white/90 max-w-xs text-center">Upload the PDF and optionally a cover image. We'll also attempt to extract a cover from the PDF automatically.</p>
+    <div class="w-full max-w-xl bg-white dark:bg-darkCard rounded-3xl shadow-xl overflow-hidden p-8">
+        <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">Upload Book</h1>
+        <p class="text-sm text-slate-500 mb-6">Drag and drop your PDF below. We'll extract the title automatically.</p>
+
+        <form method="post" enctype="multipart/form-data" class="space-y-4" id="uploadForm">
+            {% csrf_token %}
+            <input type="hidden" name="{{ form.department.name }}" value="{{ form.department.value|default:'' }}">
+            
+            <!-- Drag & Drop Zone -->
+            <div id="dropzone" class="border-2 border-dashed border-sky-300 dark:border-sky-700 bg-sky-50 dark:bg-sky-900/20 rounded-2xl p-10 text-center hover:bg-sky-100 dark:hover:bg-sky-900/40 transition-all duration-300 cursor-pointer relative group">
+                <input type="file" name="{{ form.pdf_file.name }}" id="{{ form.pdf_file.id_for_label }}" accept="application/pdf" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" required>
+                <div class="text-5xl mb-3 pointer-events-none group-hover:scale-110 transition-transform duration-300">📚</div>
+                <h3 class="text-lg font-bold text-sky-700 dark:text-sky-400 pointer-events-none" id="dropzoneText">Click or Drag PDF here</h3>
+                <p class="text-sm text-sky-600/70 dark:text-sky-400/70 mt-1 pointer-events-none" id="dropzoneSubtext">Up to 50MB</p>
+                {% if form.pdf_file.errors %}<p class="text-red-600 text-sm mt-2 font-bold">{{ form.pdf_file.errors.0 }}</p>{% endif %}
             </div>
 
-            <div class="p-8">
-                <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-4">Upload Book</h1>
-
-                <form method="post" enctype="multipart/form-data" class="space-y-4">
-                    {% csrf_token %}
-
-                    <div>
-                        <label for="{{ form.title.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Title</label>
-                        <input type="text" name="{{ form.title.name }}" id="{{ form.title.id_for_label }}" value="{{ form.title.value|default:'' }}" class="mt-2 w-full rounded-xl border border-slate-200 dark:border-darkBorder px-4 py-2 bg-white dark:bg-darkBg text-sm" placeholder="Book title">
-                        {% if form.title.errors %}<p class="text-red-600 text-sm mt-1">{{ form.title.errors.0 }}</p>{% endif %}
-                    </div>
-
-                    <div>
-                        <label for="{{ form.author.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Author</label>
-                        <input type="text" name="{{ form.author.name }}" id="{{ form.author.id_for_label }}" value="{{ form.author.value|default:'' }}" class="mt-2 w-full rounded-xl border border-slate-200 dark:border-darkBorder px-4 py-2 bg-white dark:bg-darkBg text-sm" placeholder="Author name">
-                        {% if form.author.errors %}<p class="text-red-600 text-sm mt-1">{{ form.author.errors.0 }}</p>{% endif %}
-                    </div>
-
-                    <div>
-                        <label for="{{ form.course_code.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Course code</label>
-                        <input type="text" name="{{ form.course_code.name }}" id="{{ form.course_code.id_for_label }}" value="{{ form.course_code.value|default:'' }}" class="mt-2 w-full rounded-xl border border-slate-200 dark:border-darkBorder px-4 py-2 bg-white dark:bg-darkBg text-sm" placeholder="e.g., PHY111">
-                        {% if form.course_code.errors %}<p class="text-red-600 text-sm mt-1">{{ form.course_code.errors.0 }}</p>{% endif %}
-                    </div>
-
-                    <div>
-                        <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Description</label>
-                        <textarea name="{{ form.description.name }}" id="{{ form.description.id_for_label }}" rows="4" class="mt-2 w-full rounded-xl border border-slate-200 dark:border-darkBorder px-4 py-2 bg-white dark:bg-darkBg text-sm">{{ form.description.value|default:'' }}</textarea>
-                        {% if form.description.errors %}<p class="text-red-600 text-sm mt-1">{{ form.description.errors.0 }}</p>{% endif %}
-                    </div>
-
-                    <div>
-                        <label for="{{ form.tags.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Tags</label>
-                        <input type="text" name="{{ form.tags.name }}" id="{{ form.tags.id_for_label }}" value="{{ form.tags.value|default:'' }}" class="mt-2 w-full rounded-xl border border-slate-200 dark:border-darkBorder px-4 py-2 bg-white dark:bg-darkBg text-sm" placeholder="e.g., python, django">
-                        {% if form.tags.errors %}<p class="text-red-600 text-sm mt-1">{{ form.tags.errors.0 }}</p>{% endif %}
-                    </div>
-
-                    <div>
-                        <label for="{{ form.pdf_file.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-200">PDF file</label>
-                        <input type="file" name="{{ form.pdf_file.name }}" id="{{ form.pdf_file.id_for_label }}" accept="application/pdf" class="mt-2 w-full text-sm" required>
-                        <p id="pdfName" class="text-xs text-slate-500 mt-1"></p>
-                        {% if form.pdf_file.errors %}<p class="text-red-600 text-sm mt-1">{{ form.pdf_file.errors.0 }}</p>{% endif %}
-                    </div>
-
-                    <div>
-                        <label for="{{ form.cover_image.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Cover image (optional)</label>
-                        <input type="file" name="{{ form.cover_image.name }}" id="{{ form.cover_image.id_for_label }}" accept="image/*" class="mt-2 w-full text-sm">
-                        <div id="coverPreview" class="mt-3 w-40 h-52 rounded-lg overflow-hidden bg-slate-100 flex items-center justify-center text-4xl text-slate-400">📖</div>
-                        {% if form.cover_image.errors %}<p class="text-red-600 text-sm mt-1">{{ form.cover_image.errors.0 }}</p>{% endif %}
-                    </div>
-
-                    <input type="hidden" name="{{ form.department.name }}" value="{{ form.department.value|default:'' }}">
-                    <div class="flex items-center gap-3">
-                        <button type="submit" class="inline-flex items-center justify-center rounded-2xl bg-brand-600 px-5 py-3 text-sm font-semibold text-white shadow hover:bg-brand-700">Upload Book</button>
-                        <a href="{% url 'book_list' %}" class="text-sm text-slate-500 hover:underline">Cancel</a>
-                    </div>
-                </form>
+            <!-- Title Field (Always visible) -->
+            <div>
+                <label for="{{ form.title.id_for_label }}" class="block text-sm font-bold text-slate-700 dark:text-slate-200">Title</label>
+                <input type="text" name="{{ form.title.name }}" id="{{ form.title.id_for_label }}" value="{{ form.title.value|default:'' }}" class="mt-2 w-full rounded-xl border border-slate-200 dark:border-darkBorder px-4 py-3 bg-slate-50 dark:bg-slate-800 text-sm font-bold focus:ring-2 focus:ring-sky-500 outline-none transition-all" placeholder="Book title" required>
+                {% if form.title.errors %}<p class="text-red-600 text-sm mt-1">{{ form.title.errors.0 }}</p>{% endif %}
             </div>
-        </div>
+
+            <!-- Advanced / Optional Fields Toggle -->
+            <button type="button" onclick="document.getElementById('advancedFields').classList.toggle('hidden')" class="text-sm font-bold text-slate-500 hover:text-sky-500 flex items-center gap-1 transition-colors mt-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                Advanced Options
+            </button>
+
+            <div id="advancedFields" class="hidden space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <!-- Author -->
+                <div>
+                    <label for="{{ form.author.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Author</label>
+                    <input type="text" name="{{ form.author.name }}" id="{{ form.author.id_for_label }}" value="{{ form.author.value|default:'Unknown Author' }}" class="mt-2 w-full rounded-xl border border-slate-200 dark:border-darkBorder px-4 py-2 bg-white dark:bg-darkBg text-sm" placeholder="Author name">
+                </div>
+                <!-- Course Code -->
+                <div>
+                    <label for="{{ form.course_code.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Course Code</label>
+                    <input type="text" name="{{ form.course_code.name }}" id="{{ form.course_code.id_for_label }}" value="{{ form.course_code.value|default:'' }}" class="mt-2 w-full rounded-xl border border-slate-200 dark:border-darkBorder px-4 py-2 bg-white dark:bg-darkBg text-sm" placeholder="e.g. PHY111">
+                </div>
+                <!-- Description -->
+                <div>
+                    <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Description</label>
+                    <textarea name="{{ form.description.name }}" id="{{ form.description.id_for_label }}" rows="2" class="mt-2 w-full rounded-xl border border-slate-200 dark:border-darkBorder px-4 py-2 bg-white dark:bg-darkBg text-sm">{{ form.description.value|default:'' }}</textarea>
+                </div>
+                <!-- Tags -->
+                <div>
+                    <label for="{{ form.tags.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Tags</label>
+                    <input type="text" name="{{ form.tags.name }}" id="{{ form.tags.id_for_label }}" value="{{ form.tags.value|default:'' }}" class="mt-2 w-full rounded-xl border border-slate-200 dark:border-darkBorder px-4 py-2 bg-white dark:bg-darkBg text-sm" placeholder="e.g. calculus, physics">
+                </div>
+                <!-- Cover Image -->
+                <div>
+                    <label for="{{ form.cover_image.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Cover image (optional)</label>
+                    <input type="file" name="{{ form.cover_image.name }}" id="{{ form.cover_image.id_for_label }}" accept="image/*" class="mt-2 w-full text-sm">
+                </div>
+            </div>
+
+            <div class="pt-6 flex items-center gap-3">
+                <button type="submit" class="flex-1 inline-flex items-center justify-center rounded-xl bg-sky-500 px-5 py-3.5 text-sm font-bold text-white shadow-md hover:bg-sky-600 transition-all transform hover:-translate-y-0.5">Upload Book</button>
+                <a href="{% url 'book_list' %}" class="px-5 py-3.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">Cancel</a>
+            </div>
+        </form>
     </div>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function(){
-    const coverInput = document.getElementById('{{ form.cover_image.id_for_label }}');
-    const coverPreview = document.getElementById('coverPreview');
-    const pdfInput = document.getElementById('{{ form.pdf_file.id_for_label }}');
-    const pdfName = document.getElementById('pdfName');
+    const fileInput = document.getElementById('{{ form.pdf_file.id_for_label }}');
+    const titleInput = document.getElementById('{{ form.title.id_for_label }}');
+    const dropzoneText = document.getElementById('dropzoneText');
+    const dropzoneSubtext = document.getElementById('dropzoneSubtext');
+    const dropzone = document.getElementById('dropzone');
 
-    if(coverInput){
-        coverInput.addEventListener('change', function(e){
-            const file = e.target.files[0];
-            if(!file){ coverPreview.innerHTML = '📖'; return; }
-            const reader = new FileReader();
-            reader.onload = function(ev){
-                coverPreview.innerHTML = '';
-                const img = document.createElement('img');
-                img.src = ev.target.result;
-                img.className = 'w-full h-full object-cover';
-                coverPreview.appendChild(img);
+    function handleFile(file) {
+        if(file) {
+            dropzoneText.textContent = file.name;
+            dropzoneSubtext.textContent = (file.size / (1024*1024)).toFixed(2) + ' MB';
+            dropzone.classList.add('bg-sky-100', 'dark:bg-sky-900/50', 'border-solid', 'border-sky-500');
+            dropzone.classList.remove('border-dashed');
+            
+            // Auto-fill title if empty
+            if(titleInput.value.trim() === '') {
+                let name = file.name.replace(/\.[^/.]+$/, ""); // strip extension
+                name = name.replace(/[-_]/g, " "); // replace dashes/underscores with space
+                titleInput.value = name;
             }
-            reader.readAsDataURL(file);
-        });
+        }
     }
 
-    if(pdfInput){
-        pdfInput.addEventListener('change', function(e){
-            const file = e.target.files[0];
-            pdfName.textContent = file ? file.name : '';
-        });
-    }
+    fileInput.addEventListener('change', e => {
+        handleFile(e.target.files[0]);
+    });
+
+    // Drag and drop styling
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropzone.addEventListener(eventName, preventDefaults, false);
+    });
+    function preventDefaults (e) { e.preventDefault(); e.stopPropagation(); }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropzone.addEventListener(eventName, () => { dropzone.classList.add('scale-[1.02]', 'bg-sky-100'); }, false);
+    });
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropzone.addEventListener(eventName, () => { dropzone.classList.remove('scale-[1.02]', 'bg-sky-100'); }, false);
+    });
+
+    dropzone.addEventListener('drop', function(e) {
+        let dt = e.dataTransfer;
+        let files = dt.files;
+        if(files.length) {
+            fileInput.files = files; // assign to input
+            handleFile(files[0]);
+        }
+    }, false);
 });
 </script>
-
 {% endblock %}

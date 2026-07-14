@@ -12,11 +12,10 @@ class BookUploadForm(forms.ModelForm):
     # Department field is required, but we will pre‑fill it with the student's department
     department = forms.ModelChoiceField(queryset=Department.objects.all(), required=True)
     course_code = forms.CharField(
-        required=True,
+        required=False,
         max_length=10,
-        validators=[course_code_validator],
         widget=forms.TextInput(attrs={'placeholder': 'e.g., PHY111'}),
-        help_text='Enter the course code for this book.',
+        help_text='Enter the course code for this book (optional).',
     )
 
     class Meta:
@@ -31,6 +30,8 @@ class BookUploadForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
+        # Make author optional in the simplified upload flow
+        self.fields['author'].required = False
+        self.fields['author'].initial = 'Unknown Author'
         for field in self.fields:
             self.fields[field].widget.attrs.update({'class': 'w-full border rounded p-2 mb-2'})

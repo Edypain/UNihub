@@ -23,11 +23,10 @@ class PastPaperUploadForm(forms.ModelForm):
 
 class LectureSlideUploadForm(forms.ModelForm):
     course_code = forms.CharField(
-        required=True,
+        required=False,
         max_length=10,
-        validators=[course_code_validator],
         widget=forms.TextInput(attrs={'placeholder': 'e.g., PHY111'}),
-        help_text='Enter the course code for this lecture slide.',
+        help_text='Enter the course code for this lecture slide (optional).',
     )
 
     class Meta:

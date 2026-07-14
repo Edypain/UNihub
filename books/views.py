@@ -103,6 +103,10 @@ def upload_book(request):
                     # If reading/saving PDF fails, fall back to normal save (form will still have pdf_file assigned)
                     pass
 
+            # Apply defaults for optional simplified-form fields
+            if not book.author or not book.author.strip():
+                book.author = 'Unknown Author'
+
             # Final save
             book.save()
             messages.success(request, 'Book uploaded successfully!')
